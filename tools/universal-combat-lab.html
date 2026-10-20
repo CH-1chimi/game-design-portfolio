@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Open-source-ready reference damage calculation and DPS sandbox: two generic unit profiles, documented selectable formulas.">
+<title>Universal Combat Lab · A/B Workspace</title><style>
+  :root { color-scheme: light; --paper:#f7f7f4; --surface:#fff; --ink:#1d2825; --muted:#67746e; --line:#dce3de; --green:#116b53; --greenSoft:#e7f4eb; --blue:#355fa7; --blueSoft:#ecf2fe; --error:#a63237; --errorSoft:#fff0ef; --shadow:0 10px 34px rgba(28,52,41,.035); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; font-size:14px; line-height:1.5; }
+  button,input { font:inherit; }
+  button { cursor:pointer; }
+  button:focus-visible,input:focus-visible { outline:3px solid #8bbaa7; outline-offset:2px; }
+  .shell { max-width:1150px; margin:auto; padding:36px 26px 56px; }
+  .brand { display:flex; align-items:center; gap:11px; font-size:12px; letter-spacing:.12em; text-transform:uppercase; font-weight:800; color:#40594f; }
+  .logo { width:31px;height:31px; display:grid; place-items:center; background:var(--green); color:white; border-radius:9px; font-size:16px; letter-spacing:0; }
+  .version { margin-left:auto; font-size:11px; font-weight:700; border:1px solid var(--line); padding:4px 8px; border-radius:40px; letter-spacing:0; background:white; color:var(--muted); text-transform:none; }
+  header { margin-bottom:29px; }
+  h1 { font-size:clamp(28px,4vw,40px); line-height:1.16; margin:18px 0 9px; letter-spacing:-.045em; font-weight:790; }
+  .lede { font-size:14px; color:var(--muted); max-width:740px; margin:0; }
+  .panel { border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:var(--shadow); }
+  .control-top { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; margin:0 0 15px; }
+  .hint { margin:0; color:var(--muted); font-size:12px; }
+  .btn { border:1px solid var(--line); border-radius:9px; background:#fff; padding:9px 13px; color:var(--ink); font-size:12px; font-weight:720; }
+  .btn:hover { background:#eef4ee; border-color:#aabcb1; }
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .profile { padding:21px; min-width:0; }
+  .profile-head { display:flex; align-items:flex-start; gap:11px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .avatar { width:37px; height:37px; display:grid; place-items:center; border-radius:11px; font-weight:800; font-size:13px; background:var(--greenSoft); color:var(--green); flex:none; }
+  .enemy .avatar { background:var(--blueSoft); color:var(--blue); }
+  .profile h2 { margin:0; font-size:17px; letter-spacing:-.02em; }
+  .small { font-size:12px; color:var(--muted); margin:1px 0 0; }
+  .pill { margin-left:auto; white-space:nowrap; font-size:10px; font-weight:780; border:1px solid #c6e1d2; color:var(--green); border-radius:40px; padding:3px 8px; }
+  .enemy .pill { border-color:#d4def4; color:var(--blue); }
+  .input-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px 13px; padding-top:19px; }
+  .field-wrap { display:flex; flex-direction:column; min-width:0; }
+  label { font-size:12px; font-weight:760; display:block; margin-bottom:5px; }
+  .unit { font-weight:500; color:var(--muted); }
+  input[type=number] { width:100%; min-width:0; padding:10px 11px; background:#fafcf9; border:1px solid #c9d5cc; border-radius:8px; color:var(--ink); font-size:17px; font-weight:730; font-variant-numeric:tabular-nums; }
+  input[type=number]:disabled { background:#edf5ee; color:#245b45; opacity:1; cursor:not-allowed; border-style:dashed; }
+  input[type=number]:hover { border-color:#89a594; }
+  input[type=number][aria-invalid=true] { background:var(--errorSoft); border-color:var(--error); }
+  .field-note { font-size:11px; color:var(--muted); margin-top:5px; min-height:17px; }
+  .field-note.error { color:var(--error); }
+  .result-section { margin-top:17px; overflow:hidden; }
+  .results-head { padding:20px 21px 15px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .results-head h2 { font-size:17px; letter-spacing:-.02em; margin:0 0 3px; }
+  .segmented { display:flex; background:#f1f4ef; border:1px solid var(--line); padding:4px; gap:3px; border-radius:11px; }
+  .segment { background:transparent; border:1px solid transparent; color:#596b62; font-size:12px; font-weight:760; padding:8px 11px; border-radius:7px; white-space:nowrap; }
+  .segment[aria-pressed=true] { color:var(--green); background:white; border-color:#cbdcd0; box-shadow:0 2px 7px rgba(0,0,0,.045); }
+  .direction { margin:0 21px 17px; font-size:12px; font-weight:760; color:#50665b; }
+  .metrics { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .metric { padding:20px 21px; border-right:1px solid var(--line); min-width:0; }
+  .metric:last-child { border-right:0; }
+  .metric .label { color:var(--muted); font-size:11px; font-weight:710; margin-bottom:5px; }
+  .value { font-size:clamp(23px,3vw,29px); line-height:1.2; font-weight:790; letter-spacing:-.04em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  .metric.primary { background:#f1f8f3; }
+  .metric.primary .value { color:var(--green); }
+  .metric .detail { color:var(--muted); font-size:10px; margin-top:4px; }
+  .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  .breakdown,.additional { padding:20px 21px 21px; min-width:0; }
+  .breakdown { border-right:1px solid var(--line); }
+  h3 { font-size:13px; margin:0 0 13px; letter-spacing:-.01em; }
+  .formula-code { display:block; padding:11px 12px; color:#235c47; background:#f0f7f1; border:1px solid #d7e9dc; border-radius:8px; font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .breakrow { display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:12px; padding:7px 0; border-bottom:1px solid #edf1ed; }
+  .breakrow:last-child { border:0; }
+  .breakrow strong { font-variant-numeric:tabular-nums; text-align:right; }
+  .error-banner { margin:0 21px 17px; border:1px solid #efc2c0; background:var(--errorSoft); color:var(--error); padding:10px 12px; border-radius:8px; font-size:12px; }
+  .note { margin:13px 21px 19px; font-size:11px; color:var(--muted); }
+  footer { margin-top:17px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  @media (max-width:900px) { .metrics { grid-template-columns:1fr 1fr; } .metric:nth-child(2) { border-right:0; } .metric:nth-child(-n+2) { border-bottom:1px solid var(--line); } }
+  @media (max-width:700px) { .shell { padding:22px 12px 30px; } .layout,.bottom-grid { grid-template-columns:1fr; } .breakdown { border-right:0; border-bottom:1px solid var(--line); } .input-grid { gap:13px 10px; } .profile { padding:17px; } .results-head { align-items:flex-start; } .segmented { width:100%; } .segment { flex:1; } .metric { padding:15px; } }
+  @media (max-width:380px) { .input-grid { grid-template-columns:1fr; } .segment { padding:7px 5px; font-size:11px; } }
+
+  select {font:inherit;color:var(--ink);background:white;border:1px solid #c9d5cc;border-radius:8px;padding:10px 11px;max-width:100%;width:100%}
+  .formula-panel {padding:21px;margin-top:0;margin-bottom:18px}
+  .formula-flex {display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .formula-params {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:15px 0}
+  .formula-params input,.formula-params select{font-size:14px;font-weight:600}
+  .formula-meta {margin-top:3px;border:1px solid var(--line);border-radius:10px;background:#fafcf9;padding:12px 14px;font-size:12px}
+  .formula-meta strong {display:block;margin:0 0 5px;overflow-wrap:anywhere}
+  .formula-meta a {color:var(--green);text-decoration:underline}
+  .tag {display:inline-block;border:1px solid #c4d4c9;border-radius:5px;padding:1px 6px;font-size:10px;color:#496153;background:#f4f8f5;font-weight:750}
+  .tag.simplified {background:#fff5e7;color:#735015;border-color:#e6d3b5}
+  .subtle {color:var(--muted);font-size:11px}
+  .formula-list {font-size:12px;line-height:1.7;margin:8px 0 0 18px;padding:0}
+  .stack-note {margin-top:8px;font-size:11px;color:var(--muted)}
+  .sources {font-size:11px;border-top:1px solid var(--line);padding-top:13px;margin-top:15px}
+  .sources a {color:var(--green)}
+  .sources ul {padding-left:20px;margin:8px 0}
+  .field-wrap[hidden],.formula-params .field-wrap[hidden]{display:none}
+  .breakdown{white-space:normal}
+  .trace-list {list-style:none;padding:0;margin:10px 0 0}
+  .trace-list li {border-bottom:1px solid #edf1ed;padding:7px 0;font:11px/1.55 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+  .trace-list li:last-child {border-bottom:0}
+  .formula-code{margin-bottom:10px}
+  @media(max-width:700px){.formula-flex{grid-template-columns:1fr}.formula-params{grid-template-columns:1fr 1fr}.formula-panel{padding:17px}}
+  @media(max-width:380px){.formula-params{grid-template-columns:1fr}}
+
+/* Functional workspace controls, deliberately minimal in this phase. */
+.workspace{margin-top:18px}.workspace h2{margin:0 0 8px}.workspace-tools,.baseline-tools{display:flex;align-items:end;flex-wrap:wrap;gap:9px;margin:14px 0}.workspace-tools .field-wrap{min-width:210px;flex:1}.workspace-tools .field-wrap input{width:100%}.workspace .small{margin:8px 0}.upload-btn{display:inline-flex;align-items:center;cursor:pointer}.table-wrap{overflow-x:auto}.comparison{width:100%;border-collapse:collapse;white-space:nowrap;font-variant-numeric:tabular-nums}.comparison th,.comparison td{padding:9px;text-align:right;border-bottom:1px solid var(--border)}.comparison th:first-child,.comparison td:first-child{text-align:left}.comparison .difference{font-weight:700}.workspace button:disabled{opacity:.45;cursor:not-allowed}
+/* v0.7 analytical workspace, functional-first */
+.analytics{padding:21px;margin-top:17px;min-width:0}.analytics h2{font-size:17px;margin:0 0 6px}.analytics h3{margin:23px 0 10px}.analytics .analysis-subheading{margin-top:19px}.analysis-controls{display:grid;grid-template-columns:minmax(190px,2fr) repeat(3,minmax(110px,1fr));gap:12px;align-items:end}.solver-controls{grid-template-columns:repeat(3,minmax(0,1fr))}.analytics select,.analytics input[type=number]{width:100%;font:inherit;border:1px solid #c9d5cc;border-radius:8px;background:#fafcf9;padding:9px;min-width:0}.analysis-actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:13px 0}.analysis-actions .chart-metric{margin-left:auto;min-width:220px}.analysis-status{padding:9px 11px;border:1px solid #d7e9dc;border-radius:8px;background:#f4f9f4;color:#305845;overflow-wrap:anywhere}.chart-holder{width:100%;min-height:260px;border:1px solid var(--line);border-radius:9px;margin:12px 0;padding:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;overflow:hidden}.chart-holder svg{display:block;width:100%;height:auto;max-height:340px}.chart-holder .axis{stroke:#aebbb3;stroke-width:1}.chart-holder .gridline{stroke:#e7ede8;stroke-width:1}.chart-holder text{fill:#55685d;font:12px system-ui,sans-serif}.chart-holder .current-line{stroke:#116b53;stroke-width:2.4;fill:none}.chart-holder .baseline-line{stroke:#355fa7;stroke-width:2.1;stroke-dasharray:7 4;fill:none}.table-wrap.analysis-table{margin-top:12px;max-height:270px;overflow:auto}.analytics table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:12px}.analytics th,.analytics td{text-align:right;padding:7px 9px;border-bottom:1px solid #e1e9e3;white-space:nowrap}.analytics th:first-child,.analytics td:first-child{text-align:left}.analytics th{position:sticky;top:0;background:#eff5f0}.breakpoints{display:grid;gap:7px;margin-top:9px}.breakpoint-item{border:1px solid var(--line);background:#fafcf9;padding:9px 11px;border-radius:8px;font-size:12px}.analysis-separator{border-top:1px solid var(--line);margin:21px 0 0}@media(max-width:740px){.analysis-controls,.solver-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis-controls .field-wrap:first-child{grid-column:1/-1}.analysis-actions .chart-metric{margin-left:0;width:100%}.analytics{padding:14px}.chart-holder{min-height:210px}}
+/* v0.8 tab organization and A/B-only battle visualization */
+.main-nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:0 0 21px;padding-bottom:6px}.nav-tab{appearance:none;border:0;border-bottom:3px solid transparent;background:transparent;padding:12px 15px;color:var(--muted);font-size:13px;font-weight:750;cursor:pointer;border-radius:6px 6px 0 0}.nav-tab:hover{background:#eaf3ed;color:var(--ink)}.nav-tab[aria-selected=true]{border-bottom-color:var(--green);color:var(--green);background:#edf6ee}.tab-panel[hidden],#battle-results[hidden]{display:none!important}.tab-panel{min-width:0}.workspace,.analytics{margin-top:0}.battle{padding:22px;min-width:0}.battle-heading{display:flex;justify-content:space-between;gap:15px;align-items:start;flex-wrap:wrap}.battle h2{margin:0 0 6px;font-size:18px}.battle-settings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:12px;align-items:end;margin:18px 0}.battle-settings input[type=number]{font-size:14px;padding:10px}.battle-primary{background:var(--green);color:white;border-color:var(--green)}.battle-primary:hover{background:#0b5844;color:white}.battle-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin:18px 0 8px}.battle-speed{max-width:110px;margin-left:auto}.battle-speed select{padding:7px}.battle-controls output{font-variant-numeric:tabular-nums;font-weight:800;min-width:72px;text-align:right;padding:7px}.battle #battle-seek{width:100%;accent-color:var(--green);margin:6px 0 16px}.battle-lanes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:6px 0 16px}.battle-lane{min-width:0;border:1px solid #ccded3;background:#f8fbf9;border-radius:11px;padding:15px}.battle-lane.current{border-color:#cfdcf0;background:#f7faff}.lane-header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.lane-header h3{margin:0;font-size:14px}.lane-formula{font-size:11px;color:var(--muted)}.fighters{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:8px;align-items:center;margin:18px 0 12px}.fighter-box{min-width:0;font-size:12px;font-variant-numeric:tabular-nums}.fighter-box span{font-size:11px;color:var(--muted)}.versus{font-size:11px;color:var(--muted);font-weight:750;text-align:center}.hp-track{height:10px;background:#e3e9e4;border:1px solid #d3dfd4;border-radius:30px;overflow:hidden;margin:8px 0 5px}.hp-track>div{height:100%;width:100%;transition:width .09s linear}.hp-player-fill{background:#24906e}.hp-enemy-fill{background:#547bc3}.battle-tick{min-height:45px;font-size:12px;color:#506259;border-bottom:1px solid var(--line);padding-bottom:8px}.battle-outcome{font-size:12px;font-weight:800;margin:10px 0 0}.battle-compare{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}.battle-compare th,.battle-compare td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right}.battle-compare th:first-child,.battle-compare td:first-child{text-align:left}.battle-compare th{background:#f1f6f2}.battle #battle-results>.small{margin-top:13px}@media(max-width:810px){.battle-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.battle-lanes{grid-template-columns:1fr}.battle-primary{width:100%}}@media(max-width:440px){.nav-tab{flex:1 1 45%;padding:9px 6px;font-size:12px}.battle{padding:14px}.battle-controls .btn{padding:7px 8px}.battle-speed{margin-left:0}.battle-settings{grid-template-columns:1fr}}
+/* Match the balancing tab to the other independently padded work areas. */
+.workspace{padding:21px}.workspace #project-name{border:1px solid #c9d5cc;border-radius:8px;padding:10px 11px;min-width:0;background:#fafcf9;color:var(--ink);font:inherit}.workspace .comparison th,.workspace .comparison td{border-bottom-color:var(--line)}@media(max-width:700px){.workspace{padding:15px}}
+
+/* Formula-first calculator flow */
+.unit-section-title{margin:0 0 12px}.unit-section-title h2{font-size:17px;letter-spacing:-.02em;margin:0}.unit-section-title .small{margin:2px 0 0}.formula-panel #formula-select{font-weight:700}
+
+/* v0.8.2: usability pass. Preserve all functional input/output IDs. */
+:root{--focus:#197f65;--baseline:#6c7380;--current:#2868a4}
+.shell{max-width:1220px;padding-top:25px}header{margin-bottom:18px}header h1{font-size:clamp(26px,3vw,35px);margin:11px 0 6px}.lede{max-width:860px;line-height:1.45}
+.main-nav{position:sticky;top:0;z-index:12;background:var(--paper);margin-bottom:0;padding:7px 0;border-bottom:1px solid var(--line);gap:5px}
+.nav-tab{border-radius:8px;padding:11px 16px;min-height:42px}.nav-tab[aria-selected=true]{border-bottom-color:var(--green);background:#e4f2e9}
+.context-strip{display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;padding:12px 1px 17px;min-width:0}
+.context-item{display:flex;align-items:baseline;gap:7px;font-size:11px;min-width:0}.context-item:not(:last-child){border-right:1px solid #d3dfd7;padding-right:14px}.context-label{color:var(--muted);font-weight:600}.context-item strong{color:#344e42;font-size:11px;font-weight:750;overflow-wrap:anywhere}.context-item .context-ready{color:#12684d}
+.field-wrap{min-width:0}label{font-weight:700}input,select,.btn{min-height:40px}input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[aria-invalid=true]{border-color:var(--error)!important;background:#fff4f3!important}
+.btn-primary{background:var(--green);border-color:var(--green);color:#fff}.btn-primary:hover{background:#0c5947;color:#fff;border-color:#0c5947}.btn:disabled,.btn-primary:disabled{opacity:.47;cursor:not-allowed}.btn-subtle-danger{color:#8b4141}
+.formula-panel{padding:18px 20px}.formula-flex{gap:8px}.formula-panel .field-note{margin-top:6px}
+.formula-details{margin-top:10px}.disclosure{border:1px solid var(--line);background:#fbfcfa;border-radius:10px;min-width:0}.disclosure>summary{display:list-item;cursor:pointer;list-style-position:inside;color:#315846;font-weight:750;font-size:12px;padding:11px 13px}.disclosure>summary:hover{background:#eef5ef}.disclosure[open]>summary{border-bottom:1px solid var(--line)}.formula-details .formula-meta{margin:10px 12px;border:0;background:none;padding:0}.formula-meta strong{font-size:13px}.formula-params{margin:13px 0 9px}.formula-panel .stack-note{margin-bottom:0}
+.control-top{margin:0 0 12px}.control-top .btn{min-height:35px;font-size:11px}.unit-section-title{margin:0 0 10px}.profile{padding:18px}.profile-head{padding-bottom:12px}.input-grid{gap:11px 12px}.field-note{line-height:1.35}.result-section{margin-top:13px}.results-head{padding:17px 19px}.metrics .metric{padding:17px 15px}.metrics .metric .value{font-size:clamp(21px,2.5vw,29px)}.result-disclosure{margin:15px 18px;background:white}.result-disclosure .bottom-grid{margin:0}.result-disclosure .breakdown,.result-disclosure .additional{padding:18px}.result-disclosure .formula-code{overflow-wrap:anywhere}.result-section>.note{padding:2px 19px 16px;margin-top:5px}
+.page-intro{margin-bottom:15px}.page-intro h2{margin-bottom:4px}.section-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.section-heading h3,.analytics .section-heading h3{font-size:14px;margin:0}.section-eyebrow{text-transform:uppercase;letter-spacing:.09em;font-weight:800;font-size:10px;color:#6c8072}
+.workspace,.analytics,.battle{padding:20px}.workspace-block,.analysis-section,.battle-setup{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px;margin-top:13px;min-width:0}.workspace-tools,.baseline-tools{margin:9px 0}.workspace .table-wrap{margin-top:12px}.workspace .status-line{margin:10px 0 0;background:#f2f7f2;padding:10px;border-radius:7px}.workspace #baseline-status{padding:11px 12px;border-left:3px solid #8b9b8e;background:#f7f9f7;overflow-wrap:anywhere}.comparison th,.comparison td{padding:11px 10px;line-height:1.4}.comparison th{background:#f0f5f1}.comparison td:nth-child(2){color:#596575;background:#f8fafc}.comparison td:nth-child(3){color:#115f85;background:#f5f9fd}
+.analytics .analysis-section{padding:16px;margin-top:15px}.analytics .analysis-section .section-heading h3{margin:0}.analytics .analysis-section .analysis-subheading{margin:0}.analytics .analysis-controls{margin-top:10px}.analytics .analysis-actions{margin:10px 0}.analysis-status{font-size:12px;line-height:1.45}.chart-holder{min-height:255px;background:#fff}.data-disclosure{margin-top:13px}.data-disclosure .table-wrap{margin:0 11px 11px}.analytics .analysis-separator{display:none}.breakpoint-item{line-height:1.5}
+.battle-setup{background:#fbfdfb}.battle-settings{margin:10px 0}.battle-heading{align-items:center}.battle-lanes{margin-top:9px}.lane-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:12px 0 4px;font-size:11px;color:#53645e;font-weight:700}.lane-legend span{display:flex;align-items:center;gap:6px}.legend-swatch{display:inline-block;width:9px;height:9px;border-radius:50%}.baseline-swatch{background:var(--baseline)}.current-swatch{background:var(--current)}.battle-lane{border-left:4px solid var(--baseline);background:#fafbfc}.battle-lane.current{border-left-color:var(--current);background:#f7faff}.battle-controls{border:1px solid var(--line);padding:9px;border-radius:9px;background:#f8faf8}.battle-compare th:nth-child(2),.battle-compare td:nth-child(2){background:#f8fafc}.battle-compare th:nth-child(3),.battle-compare td:nth-child(3){background:#f0f6fd}
+@media(max-width:810px){.main-nav{position:static}.context-item.context-project{flex-basis:100%;border-right:0;padding-right:0}.workspace,.analytics,.battle{padding:14px}.workspace-block,.analysis-section,.battle-setup{padding:13px}.result-disclosure{margin:12px}.result-disclosure .breakdown,.result-disclosure .additional{padding:14px}}
+@media(max-width:440px){.shell{padding:17px 10px 28px}.brand{font-size:10px}.version{font-size:10px}.nav-tab{padding:10px 7px}.context-strip{gap:5px 8px}.context-item{font-size:10px}.context-item strong{font-size:10px}.context-item:not(:last-child){padding-right:8px}.formula-panel{padding:14px}.profile{padding:14px}.workspace-tools .field-wrap{flex-basis:100%}.analysis-section .analysis-actions .btn{flex:1}.battle-controls{gap:5px}.result-disclosure .bottom-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Preserve plot label readability on narrow viewports; scroll the plot rather than shrinking it. */
+@media(max-width:700px){.chart-holder{justify-content:flex-start;overflow-x:auto;overscroll-behavior-inline:contain;min-height:224px}.chart-holder svg{flex:0 0 520px;width:520px;max-width:none;height:auto}.analysis-section .chart-holder::after{content:none}}
+
+.chart-scroll-hint{display:none;color:#55695b}@media(max-width:700px){.chart-scroll-hint{display:block;margin:2px 0 6px}}
+</style><style>.portfolio-return{background:#102d25;color:#e6f8ec;padding:11px 17px;font:600 13px/1.5 system-ui,sans-serif;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.portfolio-return a{color:#d8fce7}.portfolio-return span{opacity:.85;font-size:11px;max-width:630px}</style></head><body><div class="portfolio-return"><a href="../index.html#tools">← Return to portfolio / Tools</a><span>Independent generic combat reference sandbox · self-contained offline tool · game-specific formula caveats are included inside</span></div><main class="shell">
+<header><div class="brand"><span class="logo" aria-hidden="true">∑</span>Universal Combat Lab <span class="version">v0.8.2 · UX refinement</span></div><h1>Damage &amp; DPS sandbox</h1><p class="lede">Select a formula, tune two units, inspect the numbers, and compare a saved baseline against your changes.</p></header>
+<nav class="main-nav" role="tablist" aria-label="Workspace navigation">
+ <button id="nav-calculator" class="nav-tab" role="tab" aria-controls="tab-calculator" aria-selected="true" tabindex="0" data-tab="calculator" type="button">Calculator</button>
+ <button id="nav-workspace" class="nav-tab" role="tab" aria-controls="tab-workspace" aria-selected="false" tabindex="-1" data-tab="workspace" type="button">Balancing Workspace</button>
+ <button id="nav-analytics" class="nav-tab" role="tab" aria-controls="tab-analytics" aria-selected="false" tabindex="-1" data-tab="analytics" type="button">Analytics</button>
+ <button id="nav-battle" class="nav-tab" role="tab" aria-controls="tab-battle" aria-selected="false" tabindex="-1" data-tab="battle" type="button">A/B Battle</button>
+</nav>
+<div class="context-strip" aria-label="Current project context"><span class="context-item"><span class="context-label">Formula</span><strong id="context-formula">—</strong></span><span class="context-item"><span class="context-label">Baseline</span><strong id="context-baseline">Not captured</strong></span><span class="context-item context-project"><span class="context-label">Project</span><strong id="context-project">Untitled balance project</strong></span></div>
+<section id="tab-calculator" class="tab-panel" role="tabpanel" aria-labelledby="nav-calculator">
+<section class="panel formula-panel" aria-labelledby="formula-title"><h2 id="formula-title" style="margin:0 0 13px;font-size:17px">1 · Choose damage formula</h2><div class="formula-flex"><div class="field-wrap"><label for="formula-select">Damage formula (reference game)</label><select id="formula-select"></select><div class="field-note">Choose the formula before editing units. Reference mechanics and scope appear alongside it.</div></div><details class="disclosure formula-details"><summary>Formula mechanics, classification and references</summary><div class="formula-meta" id="formula-meta" aria-live="polite"></div></details></div><div class="formula-params" id="formula-params"></div><p class="stack-note" id="formula-warning"></p></section>
+<div class="control-top"><p class="hint">Example values are synthetic. Formula-specific inputs appear automatically.</p><button class="btn" id="reset" type="button">Reset calculator inputs</button></div>
+<div class="unit-section-title"><h2>2 · Configure unit values</h2><p class="small">Fields required by your chosen formula are enabled and validated automatically.</p></div>
+<section class="layout" aria-label="Unit inputs">
+<article class="panel profile player" aria-labelledby="player-title"><div class="profile-head"><div class="avatar" aria-hidden="true">P</div><div><h2 id="player-title">Player Unit</h2><p class="small">Editable numeric profile</p></div><span class="pill">PLAYER</span></div><div class="input-grid" id="player-fields"></div></article>
+<article class="panel profile enemy" aria-labelledby="enemy-title"><div class="profile-head"><div class="avatar" aria-hidden="true">E</div><div><h2 id="enemy-title">Enemy Unit</h2><p class="small">One generic target profile</p></div><span class="pill">ENEMY</span></div><div class="input-grid" id="enemy-fields"></div></article>
+</section>
+
+<section class="panel result-section" aria-labelledby="results-title"><div class="results-head"><div><h2 id="results-title">3 · DPS sandbox</h2><p class="small">Deterministic calculation, not combat playback.</p></div><div class="segmented" role="group" aria-label="Calculation direction"><button class="segment" id="player-to-enemy" aria-pressed="true" type="button">Player → Enemy</button><button class="segment" id="enemy-to-player" aria-pressed="false" type="button">Enemy → Player</button></div></div><div class="direction" id="direction-label">PLAYER → ENEMY</div><div class="error-banner" id="error-banner" role="alert" hidden></div>
+<div class="metrics" aria-live="polite" aria-atomic="true"><div class="metric primary"><div class="label">Final damage / hit</div><div class="value" id="damage">—</div><div class="detail">After formula</div></div><div class="metric primary"><div class="label">Theoretical DPS</div><div class="value" id="dps">—</div><div class="detail">Damage / attack interval</div></div><div class="metric"><div class="label">HP after one hit</div><div class="value" id="remaining-hp">—</div><div class="detail">Defender's HP</div></div><div class="metric"><div class="label">Hits to defeat</div><div class="value" id="hits">—</div><div class="detail" id="hit-note">Mathematical hit count</div></div></div>
+<details class="disclosure result-disclosure"><summary>Calculation breakdown and advanced results</summary><div class="bottom-grid"><div class="breakdown"><h3>Formula breakdown</h3><code class="formula-code" id="formula-code">—</code><ol class="trace-list" id="formula-trace"></ol></div><div class="additional"><h3>Additional results</h3><div class="breakrow"><span>Reference damage before mitigation</span><strong id="baseline">—</strong></div><div class="breakrow"><span>Difference vs reference damage</span><strong id="blocked">—</strong></div><div class="breakrow"><span>Attacks per second</span><strong id="attacks-sec">—</strong></div><div class="breakrow"><span>Effective target defense</span><strong id="effective-defense">—</strong></div><div class="breakrow"><span>Reduction vs reference (%)</span><strong id="mitigation-percent">—</strong></div><div class="breakrow"><span>First hit immediate TTK</span><strong id="ttk-immediate">—</strong></div><div class="breakrow"><span>First hit after interval TTK</span><strong id="ttk-delayed">—</strong></div><div class="breakrow"><span>Formula classification</span><strong id="formula-status">—</strong></div><p class="subtle" id="output-note" style="margin-top:12px"></p></div></div></details><p class="note">DPS assumes repeated identical hits at a fixed interval. Hit count assumes fixed damage and no healing. It does not imply an exact combat time-to-kill. References are mathematical examples, not affiliated reproductions of the games.</p></section>
+</section>
+<section id="tab-workspace" class="panel workspace tab-panel" role="tabpanel" aria-labelledby="nav-workspace" hidden>
+  <div class="page-intro"><div><h2 id="project-heading">Balancing workspace</h2><p class="small">Capture a baseline, adjust your calculator inputs and compare the difference.</p></div></div>
+  <section class="workspace-block" aria-label="Project management"><div class="section-heading"><h3>Project and local storage</h3><span class="section-eyebrow">Private in your browser</span></div><div class="workspace-tools">
+    <div class="field-wrap"><label for="project-name">Project name</label><input id="project-name" maxlength="100" value="Untitled balance project" /></div>
+    <button class="btn" id="project-export" type="button">Export project JSON</button>
+    <label class="btn upload-btn" for="project-import">Import project JSON</label><input id="project-import" type="file" accept=".json,application/json" hidden />
+    <button class="btn btn-subtle-danger" id="clear-autosave" type="button">Clear local autosave</button>
+  </div>
+  <p id="autosave-status" class="small status-line" role="status">Local autosave initializing…</p></section>
+  <section class="workspace-block" aria-label="Baseline comparison"><div class="section-heading"><h3>Baseline vs current</h3><span class="section-eyebrow">A / B snapshot</span></div>
+  <div class="baseline-tools"><button class="btn btn-primary" id="baseline-save" type="button">Capture baseline</button><button class="btn" id="baseline-restore" type="button" disabled>Restore baseline</button><button class="btn btn-subtle-danger" id="baseline-clear" type="button" disabled>Clear baseline</button><button class="btn" id="compare-export" type="button" disabled>Export comparison CSV</button></div>
+  <p id="baseline-status" class="small">No baseline captured. Current edits are not yet compared with a snapshot.</p>
+  <div class="table-wrap"><table class="comparison"><thead><tr><th>Metric</th><th>Baseline</th><th>Current</th><th>Absolute change</th><th>Relative change</th></tr></thead><tbody id="comparison-body"><tr><td colspan="5">Capture a valid baseline to compare.</td></tr></tbody></table></div>
+  <p class="small">Snapshots preserve their original formula and settings. Different formulas or directions are noted; comparisons remain numerical.</p></section>
+</section>
+<section id="tab-analytics" class="panel analytics tab-panel" role="tabpanel" aria-labelledby="nav-analytics" hidden>
+ <h2 id="analytics-heading">Analytics</h2>
+ <p class="small">Evaluate parameter ranges analytically. No battle playback, RNG or combat simulation. The saved baseline can be overlaid across the same input range when applicable.</p>
+ <section class="analysis-section" aria-label="Stat sweep"><div class="section-heading"><h3>Stat sweep and damage curves</h3><span class="section-eyebrow">01 / Explore</span></div>
+ <div class="analysis-controls">
+  <div class="field-wrap"><label for="sweep-target">Vary input</label><select id="sweep-target"></select></div>
+  <div class="field-wrap"><label for="sweep-min">Minimum</label><input type="number" step="any" id="sweep-min"></div>
+  <div class="field-wrap"><label for="sweep-max">Maximum</label><input type="number" step="any" id="sweep-max"></div>
+  <div class="field-wrap"><label for="sweep-step">Step size</label><input type="number" step="any" id="sweep-step"></div>
+ </div>
+ <div class="analysis-actions"><button class="btn btn-primary" type="button" id="sweep-run">Run stat sweep</button><button class="btn" type="button" id="sweep-export" disabled>Export sweep CSV</button><div class="field-wrap chart-metric"><label for="sweep-metric">Chart metric</label><select id="sweep-metric"></select></div></div>
+ <p class="small analysis-status" id="sweep-status" role="status">Choose a relevant input, then run a sweep (maximum 401 samples).</p>
+ <div class="chart-holder" id="sweep-chart" role="img" aria-label="Damage sensitivity chart">Run a valid sweep to plot the results.</div>
+ <p class="small chart-scroll-hint">On narrow screens, scroll the chart sideways to inspect the full curve.</p><p class="small" id="sweep-chart-note"></p>
+ <details class="disclosure data-disclosure"><summary>View sampled results table</summary><div class="table-wrap analysis-table"><table><thead><tr><th>Input</th><th>Damage</th><th>DPS</th><th>Hits</th><th>Immediate TTK</th><th>Baseline damage</th><th>Baseline DPS</th><th>Validation</th></tr></thead><tbody id="sweep-body"><tr><td colspan="8">No sweep results yet.</td></tr></tbody></table></div>
+ </details></section><section class="analysis-section" aria-label="Breakpoints"><div class="section-heading"><h3 class="analysis-subheading">Breakpoint inspection</h3><span class="section-eyebrow">02 / Thresholds</span></div><p class="small" id="breakpoint-note">Run a sweep to detect sampled hit-count and zero-damage transitions.</p><div id="breakpoint-results" class="breakpoints"></div>
+ </section><section class="analysis-section" aria-label="Reverse target calculator"><div class="section-heading"><h3>Reverse target calculator</h3><span class="section-eyebrow">03 / Solve</span></div>
+ <p class="small">Find an input that reaches at least / at most the chosen analytical output. Current inputs remain unchanged until Apply is selected. Numerical solutions are estimates, not closed-form proofs.</p>
+ <div class="analysis-controls solver-controls">
+  <div class="field-wrap"><label for="solve-variable">Solve input</label><select id="solve-variable"></select></div>
+  <div class="field-wrap"><label for="solve-metric">Target metric</label><select id="solve-metric"></select></div>
+  <div class="field-wrap"><label for="solve-mode">Constraint</label><select id="solve-mode"><option value="atLeast">At least (≥)</option><option value="atMost">At most (≤)</option></select></div>
+  <div class="field-wrap"><label for="solve-threshold">Desired value</label><input type="number" min="0" step="any" id="solve-threshold" value="100"></div>
+  <div class="field-wrap"><label for="solve-min">Search min</label><input type="number" step="any" id="solve-min"></div>
+  <div class="field-wrap"><label for="solve-max">Search max</label><input type="number" step="any" id="solve-max"></div>
+ </div>
+ <div class="analysis-actions"><button class="btn btn-primary" type="button" id="solve-run">Find qualifying value</button><button class="btn" type="button" id="solve-apply" disabled>Apply solved value</button></div>
+ <p class="small analysis-status" id="solve-result" role="status">Select the input and target metric to evaluate.</p></section>
+</section>
+<section id="tab-battle" class="panel battle tab-panel" role="tabpanel" aria-labelledby="nav-battle" hidden>
+ <div class="battle-heading"><div><h2>A/B Battle Visualization</h2><p class="small">A is your captured baseline; B is the current scenario. Both run the same deterministic bidirectional damage engine. No separate unit setup.</p></div><button class="btn" type="button" id="battle-open-workspace">Manage baseline ↗</button></div>
+ <p id="battle-status" class="analysis-status" role="status">Capture a valid baseline in Balancing Workspace to compare two battles.</p>
+ <section class="battle-setup" aria-label="Shared battle settings"><div class="section-heading"><h3>Shared battle settings</h3><span class="section-eyebrow">Applied to both lanes</span></div><div class="battle-settings">
+  <div class="field-wrap"><label for="battle-first">First hit timing</label><select id="battle-first"><option value="immediate">Immediate at t = 0</option><option value="delayed">After first interval</option></select></div>
+  <div class="field-wrap"><label for="battle-max-time">Time cap (seconds)</label><input id="battle-max-time" type="number" min="0.001" max="3600" step="any" value="120"></div>
+  <div class="field-wrap"><label for="battle-max-attacks">Attack cap (both combatants)</label><input id="battle-max-attacks" type="number" min="1" max="5000" step="1" value="1000"></div>
+  <button class="btn btn-primary battle-primary" id="battle-run" type="button">Calculate A/B battle</button>
+ </div>
+ <p id="battle-context" class="small">Only valid captured baseline and current values are used. Player and Enemy attack independently; ties at the same timestamp resolve simultaneously.</p></section>
+ <div id="battle-results" hidden>
+  <div class="battle-controls"><button class="btn btn-primary" id="battle-play" type="button">Play</button><button class="btn" id="battle-restart" type="button">Restart</button><button class="btn" id="battle-prev" type="button" aria-label="Previous attack event">← Event</button><button class="btn" id="battle-next" type="button" aria-label="Next attack event">Event →</button><div class="field-wrap battle-speed"><label for="battle-speed">Speed</label><select id="battle-speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div><output id="battle-clock" aria-live="off">0.00 s</output></div>
+  <label class="small" for="battle-seek">Shared playback timeline (seconds)</label><input type="range" id="battle-seek" min="0" max="120" value="0" step="any" aria-label="Seek both battles to the same timestamp">
+  <p class="lane-legend"><span><i class="legend-swatch baseline-swatch"></i> A · Saved baseline</span><span><i class="legend-swatch current-swatch"></i> B · Current edits</span></p><div class="battle-lanes">
+   <article class="battle-lane" aria-labelledby="battle-a-title"><div class="lane-header"><h3 id="battle-a-title">A · Captured baseline</h3><span class="lane-formula" id="battle-a-formula">—</span></div><div class="fighters"><div class="fighter-box"><strong>Player</strong><div class="hp-track"><div class="hp-player-fill" id="battle-a-player-bar"></div></div><span id="battle-a-player-hp">—</span></div><span class="versus">VS</span><div class="fighter-box"><strong>Enemy</strong><div class="hp-track"><div class="hp-enemy-fill" id="battle-a-enemy-bar"></div></div><span id="battle-a-enemy-hp">—</span></div></div><p class="battle-tick" id="battle-a-tick">No attacks yet.</p><p class="battle-outcome" id="battle-a-outcome">—</p></article>
+   <article class="battle-lane current" aria-labelledby="battle-b-title"><div class="lane-header"><h3 id="battle-b-title">B · Current values</h3><span class="lane-formula" id="battle-b-formula">—</span></div><div class="fighters"><div class="fighter-box"><strong>Player</strong><div class="hp-track"><div class="hp-player-fill" id="battle-b-player-bar"></div></div><span id="battle-b-player-hp">—</span></div><span class="versus">VS</span><div class="fighter-box"><strong>Enemy</strong><div class="hp-track"><div class="hp-enemy-fill" id="battle-b-enemy-bar"></div></div><span id="battle-b-enemy-hp">—</span></div></div><p class="battle-tick" id="battle-b-tick">No attacks yet.</p><p class="battle-outcome" id="battle-b-outcome">—</p></article>
+  </div>
+  <div class="table-wrap"><table class="battle-compare"><thead><tr><th>Outcome metric</th><th>Baseline A</th><th>Current B</th><th>B − A</th></tr></thead><tbody id="battle-summary"></tbody></table></div>
+  <p class="small">This is a fixed-damage 1v1 visualization derived from two directional calculator results per lane. It does not model movement, abilities, RNG, healing or animation timing. Analytical one-way TTK and bidirectional battle outcomes can differ.</p>
+ </div>
+</section>
+<footer><span>Independent, synthetic reference implementation</span><span>Offline calculator · External reference links optional</span></footer>
+</main><script>
+// src/core/format.js
+const fmt = (x, digits=4) => Number(x).toLocaleString('en-US', {maximumFractionDigits:digits});
+const num = (x, digits=6) => fmt(x,digits);
+const display = x => x===null || x===undefined ? 'N/A' : fmt(x);
+
+// src/formulas/helpers.js
+const P = (id,label,defaultValue,min=0,max=1e12,help="") => ({id,label,defaultValue,min,max,help,type:"number"});
+const S = (id,label,options,defaultValue,help="") => ({id,label,options,defaultValue,help,type:"select"});
+const result = (damage, baseline, expression, trace, note="") => ({damage,baseline,expression,trace,note});
+const line=(name,value)=>`${name}: ${value}`;
+
+// src/formulas/models/flat.js
+const formula_flat = {id:"flat",label:"Flat Defense (Fire Emblem)",game:"Fire Emblem (generalized)",category:"Reference model",source:"fire",summary:"Direct subtraction. Different Fire Emblem titles can have additional exceptions and minimum-damage rules.",expression:"Damage = max(0, ATK − DEF)",params:[],calc(a,b,o){const d=Math.max(0,a.attack-b.defense);return result(d,a.attack,"max(0, ATK − DEF)",[line('ATK',num(a.attack)),line('DEF',num(b.defense)),line('Damage',`max(0, ${num(a.attack)} − ${num(b.defense)}) = ${num(d)}`)]);}};
+
+// src/formulas/models/scaledFlat.js
+const formula_scaledFlat = {id:"scaledFlat",label:"Scaled Flat Defense (Generic; Terraria-inspired)",game:"Terraria (inspiration)",category:"Configurable model",source:"terraria",summary:"A designer-defined defense coefficient. No automatic floor or minimum damage in this generalized option.",expression:"Damage = max(0, ATK − DEF × factor)",params:[P('factor','DEF coefficient',0.5,0,100)],calc(a,b,o){const reduction=b.defense*o.factor,d=Math.max(0,a.attack-reduction);return result(d,a.attack,"max(0, ATK − DEF × factor)",[line('Defense contribution',`${num(b.defense)} × ${num(o.factor)} = ${num(reduction)}`),line('Damage',num(d))]);}};
+
+// src/formulas/models/terraria.js
+const formula_terraria = {id:"terraria",label:"Difficulty-Scaled Flat Defense (Terraria)",game:"Terraria",category:"Reference model",source:"terraria",summary:"Difficulty-specific defense factor for damage to players; non-player targets always use 0.5. Applies floor and one-damage minimum for a positive incoming hit. Excludes random base-hit variation and other Terraria mechanics.",expression:"Damage = max(1, floor(ATK − DEF × factor)) when ATK > 0",params:[S('terrariaMode','Target rules',[['npc','Non-player (0.5)'],['classic','Player · Classic (0.5)'],['expert','Player · Expert (0.75)'],['master','Player · Master (1.0)']],'npc')],calc(a,b,o){const factors={npc:0.5,classic:0.5,expert:0.75,master:1};const f=factors[o.terrariaMode];const before=Math.floor(a.attack-b.defense*f);const d=a.attack===0?0:Math.max(1,before);return result(d,a.attack,"ATK > 0 ? max(1, floor(ATK − DEF × factor)) : 0",[line('Target rule',`${o.terrariaMode}: factor ${f}`),line('Before minimum',`${num(a.attack)} − ${num(b.defense)} × ${f} → floor = ${before}`),line('Final damage',num(d))],"One-hit calculation; difficulty does not modify source ATK in this model.");}};
+
+// src/formulas/models/rational.js
+const formula_rational = {id:"rational",label:"Rational Armor Scaling (Generic; LoL / Warframe-inspired)",game:"League of Legends / Warframe (inspiration)",category:"Configurable model",source:"league",source2:"warframe",summary:"General positive-defense rational formula. K controls the armor amount needed for 50% mitigation.",expression:"Damage = ATK × K / (DEF + K)",params:[P('k','Scaling constant K',100,0.000001,1e12)],calc(a,b,o){const m=o.k/(b.defense+o.k),d=a.attack*m;return result(d,a.attack,"ATK × K / (DEF + K)",[line('Multiplier',`${num(o.k)} / (${num(b.defense)} + ${num(o.k)}) = ${num(m)}`),line('Damage',num(d))]);}};
+
+// src/formulas/models/league.js
+const formula_league = {id:"league",label:"Signed Armor Scaling (League of Legends)",game:"League of Legends",category:"Reference model",source:"league",summary:"Physical damage armor multiplier, including its separate negative-armor branch. Excludes armor penetration, damage-type rules, abilities, and modifiers.",expression:"DEF ≥ 0: ATK × 100/(100+DEF); DEF < 0: ATK × (2−100/(100−DEF))",signed:true,params:[],calc(a,b){const dfn=b.defense,m=dfn>=0?100/(100+dfn):2-100/(100-dfn);return result(a.attack*m,a.attack,dfn>=0?"ATK × 100/(100 + Armor)":"ATK × (2 − 100/(100 − Armor))",[line('Armor',num(dfn)),line('Multiplier',num(m)),line('Damage',num(a.attack*m))]);}};
+
+// src/formulas/models/warframe.js
+const formula_warframe = {id:"warframe",label:"Rational Armor, K=300 (Warframe)",game:"Warframe (player armor)",category:"Reference model",source:"warframe",summary:"Player Warframe health-armor equation (K=300). This is not a general emulator of enemy armor, shields, damage types, or status effects.",expression:"Damage = ATK × 300 / (DEF + 300)",params:[],calc(a,b){const m=300/(b.defense+300);return result(a.attack*m,a.attack,"ATK × 300 / (DEF + 300)",[line('Tenno armor multiplier',`300 / (${num(b.defense)} + 300) = ${num(m)}`),line('Damage',num(a.attack*m))]);}};
+
+// src/formulas/models/dota.js
+const formula_dota = {id:"dota",label:"Signed Armor Mitigation (Dota 2)",game:"Dota 2",category:"Reference model",source:"dota",summary:"Physical damage multiplier accepts both positive and negative armor. Excludes attack/armor types and special modifiers.",expression:"Damage = ATK × (1 − 0.06 × DEF/(1 + 0.06 × |DEF|))",signed:true,params:[],calc(a,b){const m=1-(0.06*b.defense)/(1+0.06*Math.abs(b.defense));return result(a.attack*m,a.attack,"ATK × (1 − 0.06 × DEF / (1 + 0.06 × abs(DEF)))",[line('Armor',num(b.defense)),line('Multiplier',num(m)),line('Damage',num(a.attack*m))]);}};
+
+// src/formulas/models/percent.js
+const formula_percent = {id:"percent",label:"Percentage Resistance (Generic; Path of Exile-inspired)",game:"Path of Exile (inspiration)",category:"Configurable model",source:"resistance",summary:"Designer-configured percentage resistance with explicit minimum and maximum; negative values increase damage.",expression:"Damage = ATK × (1 − Resistance% / 100)",params:[P('genericMin','Minimum resistance (%)',-100,-1000,100),P('genericMax','Maximum resistance (%)',90,-100,100)],usesResistance:true,calc(a,b,o){if(o.genericMin>o.genericMax)throw Error('Minimum resistance must not exceed maximum resistance.');const eff=Math.max(o.genericMin,Math.min(o.genericMax,b.resistance));const d=a.attack*(1-eff/100);return result(d,a.attack,"ATK × (1 − clamp(Resistance%, min, max)/100)",[line('Entered resistance',`${num(b.resistance)}%`),line('Effective resistance',`${num(eff)}%`),line('Damage',num(d))]);}};
+
+// src/formulas/models/poeResistance.js
+const formula_poeResistance = {id:"poeResistance",label:"Elemental Resistance (Path of Exile)",game:"Path of Exile (elemental)",category:"Reference model",source:"resistance",summary:"Simple elemental resistance multiplier, including negative resistance, user-set maximum from 75% to 90%, and -200% floor. Excludes penetration, exposure, source-specific modifiers, and full damage conversion.",expression:"Damage = ATK × (1 − clamp(Resistance%, −200, maximum)/100)",usesResistance:true,params:[P('poeResMax','Maximum resistance (%)',75,75,90)],calc(a,b,o){const r=Math.max(-200,Math.min(o.poeResMax,b.resistance));const d=a.attack*(1-r/100);return result(d,a.attack,"ATK × (1 − clamp(Resistance%, −200, max)/100)",[line('Entered resistance',`${num(b.resistance)}%`),line('Effective resistance',`${num(r)}%`),line('Damage',num(d))]);}};
+
+// src/formulas/models/poeArmour.js
+const formula_poeArmour = {id:"poeArmour",label:"Hit-Dependent Physical Armour (Path of Exile)",game:"Path of Exile",category:"Base formula",source:"poeArmor",summary:"Hit-size-dependent physical armour reduction. Includes 90% mitigation cap; excludes additional physical reduction, damage conversion, and unrelated mechanics.",expression:"DR = min(0.90, Armour/(Armour + 5×Hit)); Damage = Hit×(1−DR)",params:[],calc(a,b){const hit=a.attack, dr=hit===0?0:Math.min(.9,b.defense/(b.defense+5*hit));const d=hit*(1-dr);return result(d,hit,"DR = min(0.90, DEF / (DEF + 5 × ATK)); Damage = ATK × (1 − DR)",[line('Raw hit',num(hit)),line('Armour mitigation',`${num(dr*100)}%`),line('Final hit',num(d))],"Separate hits are mitigated independently; no animation/tick simulation.");}};
+
+// src/formulas/models/genshin.js
+const formula_genshin = {id:"genshin",label:"Level-Based DEF Multiplier (Genshin Impact)",game:"Genshin Impact",category:"Defense stage reference",source:"genshin",summary:"DEF stage using attacker level; standard Enemy Unit DEF can be derived as 5×Enemy Level+500. Player Unit as defender uses entered DEF. Excludes reductions/ignore, elemental resistance and other stages.",expression:"Damage = ATK × (5×L_att + 500)/(5×L_att + 500 + effective DEF)",usesLevel:true,params:[S('genshinDef','Defender DEF input',[['derived','Standard enemy-derived DEF (5×level+500)'],['entered','Use defender DEF field']],'derived')],calc(a,b,o){const derived=o.genshinDef==='derived'&&b.role!=='player',eff=derived?5*b.level+500:b.defense,coef=5*a.level+500,m=coef/(coef+eff);return result(a.attack*m,a.attack,"ATK × (5×AttackerLevel+500)/(5×AttackerLevel+500+EffectiveDEF)",[line('Attacker level',num(a.level)),...(derived?[line('Enemy DEF derivation',`5 × ${num(b.level)} + 500 = ${num(eff)}`)]:[]),line('Effective target DEF',`${num(eff)} (${derived?'derived enemy': 'entered'})`),line('DEF multiplier',num(m)),line('Final damage',num(a.attack*m))],derived?'Derived Enemy Unit DEF tracks its level; manual DEF is preserved for entered mode.':'The manually entered DEF is used for this target.');}};
+
+// src/formulas/models/hsr.js
+const formula_hsr = {id:"hsr",label:"Level-Based DEF Multiplier (Honkai: Star Rail)",game:"Honkai: Star Rail",category:"Defense stage reference",source:"hsr",summary:"DEF stage using attacker level. Standard Enemy Unit DEF is 200+10×Enemy Level, capped at the Level 100 base DEF; Player Unit as defender uses entered DEF. Excludes weakness, resistance and other damage stages.",expression:"Damage = ATK × (200 + 10×L_att)/(EffectiveDEF + 200 + 10×L_att)",usesLevel:true,params:[S('hsrDef','Defender DEF input',[['derived','Standard enemy-derived DEF (200+10×level)'],['entered','Use defender DEF field']],'derived')],calc(a,b,o){const derived=o.hsrDef==='derived'&&b.role!=='player',baseLevel=derived?Math.min(b.level,100):0,eff=derived?200+10*baseLevel:b.defense,k=200+10*a.level,m=k/(eff+k);return result(a.attack*m,a.attack,"ATK × (200+10×AttackerLevel)/(EffectiveDEF+200+10×AttackerLevel)",[line('Attacker level',num(a.level)),...(derived?[line('Enemy DEF derivation',`200 + 10 × min(${num(b.level)},100) = ${num(eff)}${b.level>100?' (level 100 base DEF cap)':''}`)]:[]),line('Effective target DEF',`${num(eff)} (${derived?'derived enemy':'entered'})`),line('DEF multiplier',num(m)),line('Final damage',num(a.attack*m))],derived?'Derived Enemy Unit base DEF tracks level through Level 100; manual DEF is preserved for entered mode.':'The manually entered DEF is used for this target.');}};
+
+// src/formulas/models/pokemon.js
+const formula_pokemon = {id:"pokemon",label:"Multi-Stage Damage (Pokémon; simplified)",game:"Pokémon (modern main-series inspiration)",category:"Simplified reference",source:"pokemon",summary:"A deterministic, simplified modern damage chain. Uses ATK and DEF as effective battle stats and attacker level. Implements the core base equation plus selected modifiers; does NOT reproduce every generation's fixed-point arithmetic, effects, exceptions, battle RNG, or attack timing.",expression:"Base = floor(floor((floor(2×Level/5)+2)×Power×ATK/DEF)/50)+2; selected modifiers follow",usesLevel:true,params:[P('power','Move power',80,1,1000000),S('crit','Critical multiplier',[['1','Normal (×1)'],['1.5','Critical (×1.5)']],'1'),P('roll','Fixed random roll (%)',100,85,100),S('stab','Same-type bonus',[['1','No (×1)'],['1.5','STAB (×1.5)'],['2','Enhanced (×2)']],'1'),S('type','Type effectiveness',[['0','Immune (×0)'],['0.25','Quarter (×0.25)'],['0.5','Half (×0.5)'],['1','Neutral (×1)'],['2','Double (×2)'],['4','Quadruple (×4)']],'1'),S('burn','Burn modifier',[['1','None (×1)'],['0.5','Applied (×0.5)']],'1')],calc(a,b,o){if(a.attack<=0||b.defense<=0)throw Error('For Pokémon model, attacker ATK and defender DEF must be greater than zero.');const levelTerm=Math.floor(2*a.level/5)+2;const intermediate=Math.floor(levelTerm*o.power*a.attack/b.defense),base=Math.floor(intermediate/50)+2;const rDown=v=>Math.ceil(v-.5);let v=base;const t=[line('Level term',num(levelTerm)),line('Pre /50 (floored)',num(intermediate)),line('Base damage',num(base))];const mods=[['Critical',Number(o.crit),'nearest'],['Fixed random roll',o.roll/100,'floor'],['STAB',Number(o.stab),'nearest'],['Type',Number(o.type),'nearest'],['Burn',Number(o.burn),'nearest']];for(const [name,m,method] of mods){v=method==='floor'?Math.floor(v*m):rDown(v*m);t.push(line(name,`${num(m)}× → ${num(v)}`));}v=Number(o.type)===0?0:Math.max(1,v);t.push(line('Result',num(v)));return result(v,base,"Base = floor(floor((floor(2L/5)+2) × Power × ATK / DEF)/50)+2; apply selected modifiers",t,"Fixed roll, not a probability simulation. Modifier chain is educational and intentionally omits game-specific edge cases. Attack interval is a user-specified comparison parameter, not a Pokémon turn-timing rule.");}};
+
+// src/formulas/models/elden.js
+const formula_elden = {id:"elden",label:"Nonlinear Defense + Negation (Elden Ring)",game:"Elden Ring (nonlinear defense)",category:"Reference model",source:"elden",source2:"eldenDetails",summary:"Five-region Attack/Defense curve with a separate damage-negation step; single damage channel only. Simplifies motion values, split damage, body-part interactions, buffs and rounding.",expression:"Damage = ATK × piecewise(ATK/DEF) × (1 − negation%/100)",usesNegation:true,params:[],calc(a,b){const atk=a.attack,df=b.defense,ratio=df===0?Infinity:atk/df;let m,region;if(atk===0){m=.1;region='Zero attack';}else if(ratio<.125){m=.1;region='ratio < 0.125';}else if(ratio<1){m=.1+Math.pow(ratio-.125,2)/2.5520833333333335;region='0.125 ≤ ratio < 1';}else if(ratio<2.5){m=.7-Math.pow(2.5-ratio,2)/7.5;region='1 ≤ ratio < 2.5';}else if(ratio<8){m=.9-Math.pow(8-ratio,2)/151.25;region='2.5 ≤ ratio < 8';}else{m=.9;region='ratio ≥ 8';}const after=atk*m,d=after*(1-b.negation/100);return result(d,atk,"ATK × piecewise(ATK/DEF) × (1 − negation%/100)",[line('ATK/DEF ratio',Number.isFinite(ratio)?num(ratio):'∞ (DEF=0)'),line('Curve region',region),line('Defense multiplier',num(m)),line('After defense',num(after)),line('Damage negation',`${num(b.negation)}%`),line('Final damage',num(d))],"This models one attack power and one corresponding defense/negation category, not a complete attack with multiple damage types.");}};
+
+// src/formulas/registry.js
+const sources = Object.freeze({
+  fire:"https://fireemblem.fandom.com/wiki/Battle_Formulas",
+  terraria:"https://terraria.wiki.gg/wiki/Defense",
+  league:"https://wiki.leagueoflegends.com/en-us/Armor",
+  warframe:"https://warframe.fandom.com/wiki/Armor",
+  dota:"https://dota2.fandom.com/wiki/Armor",
+  resistance:"https://www.poewiki.net/wiki/Resistance",
+  poeArmor:"https://www.poewiki.net/wiki/Armour",
+  genshin:"https://genshin-impact.fandom.com/wiki/DEF",
+  hsr:"https://honkai-star-rail.fandom.com/wiki/DEF",
+  pokemon:"https://bulbapedia.bulbagarden.net/wiki/Damage",
+  elden:"https://eldenring.wiki.gg/wiki/Stats_and_Attributes",
+  eldenDetails:"https://steamcommunity.com/sharedfiles/filedetails/?id=3476225321"
+});
+
+const models = [formula_flat, formula_scaledFlat, formula_terraria, formula_rational, formula_league, formula_warframe, formula_dota, formula_percent, formula_poeResistance, formula_poeArmour, formula_genshin, formula_hsr, formula_pokemon, formula_elden];
+const registry=Object.fromEntries(models.map(x=>[x.id,x]));
+const defaults=Object.freeze({player:Object.freeze({attack:120,defense:20,hp:600,interval:1.5,level:80,resistance:20,negation:15}),enemy:Object.freeze({attack:75,defense:35,hp:500,interval:2,level:80,resistance:25,negation:10})});
+const fields=[['attack','Attack (ATK)','Power per hit'],['defense','Defense (DEF)','Physical / relevant defense'],['hp','Health (HP)','Defender health'],['interval','Attack interval (seconds)','Time between repeated hits'],['level','Level','Used only by level formulas'],['resistance','Resistance (%)','Used only by percentage formulas'],['negation','Damage negation (%)','Used only by Elden Ring model']];
+
+for (const model of models) { model.version = 1; model.referenceUrls = [sources[model.source], ...(model.source2 ? [sources[model.source2]] : [])]; model.roundingPolicy = model.id === "pokemon" ? "Simplified formula-specific integer flooring and rounding; no additional engine rounding" : model.id === "terraria" ? "Floor after scaled defense; positive hits have one-damage minimum" : "No extra engine rounding; outputs displayed to four decimals"; }
+
+// src/core/contract.js
+const FORMULA_CONTRACT_VERSION=1;
+const FIELD_KEYS = fields.map(f=>f[0]);
+const SIDES=['player','enemy'];
+function getDependencies(id,direction,options){
+ const model=registry[id];if(!model)throw Error('Unknown formula identifier.');
+ if(!SIDES.includes(direction))throw Error('Invalid calculation direction.');
+ const attacker=direction,defender=direction==='player'?'enemy':'player';
+ const derived=(id==='genshin'||id==='hsr')&&defender==='enemy'&&options[id==='genshin'?'genshinDef':'hsrDef']==='derived';
+ const required={player:new Set(),enemy:new Set()};
+ required[attacker].add('attack');required[attacker].add('interval');
+ if(model.usesLevel)required[attacker].add('level');
+ required[defender].add('hp');
+ if(model.usesResistance)required[defender].add('resistance');
+ else if(!derived)required[defender].add('defense');
+ if(derived)required[defender].add('level');
+ if(model.usesNegation)required[defender].add('negation');
+ return {attacker,defender,derived,required};
+}
+function validateInputs(id,direction,values,options){
+ const model=registry[id],dep=getDependencies(id,direction,options),errors=[],data={};
+ for(const side of SIDES){data[side]={role:side};for(const [key,label] of fields){
+   const raw=values[side]?.[key],str=raw===undefined||raw===null?'':String(raw).trim(),n=Number(str),needed=dep.required[side].has(key);
+   let valid=!needed||(str!==''&&Number.isFinite(n));
+   if(valid&&needed){
+     if(key==='interval')valid=n>0;
+     else if(key==='level')valid=Number.isInteger(n)&&n>=1&&n<=1000000;
+     else if(key==='hp'||key==='attack')valid=n>=0;
+     else if(key==='defense')valid=model.signed||n>=0;
+     else if(key==='resistance')valid=n>=-1000&&n<=1000;
+     else if(key==='negation')valid=n>=0&&n<=100;
+   }
+   if(!valid)errors.push({side,key,label,message:`${side}: ${label} is invalid`});
+   data[side][key]=str===''?NaN:n;
+ }}
+ const cleanOptions={};
+ for(const p of model.params){
+   const raw=options?.[p.id],str=raw===undefined||raw===null?'':String(raw).trim();
+   if(p.type==='select'){
+     const valid=p.options.some(([value])=>value===raw);if(!valid)errors.push({side:'formula',key:p.id,label:p.label,message:`${p.label} is invalid`});cleanOptions[p.id]=raw;
+   }else{
+     const value=Number(str),valid=str!==''&&Number.isFinite(value)&&value>=p.min&&value<=p.max;
+     if(!valid)errors.push({side:'formula',key:p.id,label:p.label,message:`${p.label} is invalid`});cleanOptions[p.id]=value;
+   }
+ }
+ if(id==='percent'&&errors.length===0&&cleanOptions.genericMin>cleanOptions.genericMax)errors.push({side:'formula',key:'genericMin',label:'Resistance bounds',message:'Minimum resistance exceeds maximum'});
+ return {data,options:cleanOptions,dependencies:dep,errors};
+}
+function effectiveDefense(id,defender,options){
+ if(id==='genshin'&&options.genshinDef==='derived'&&defender.role==='enemy')return {value:5*defender.level+500,origin:'derived from enemy level'};
+ if(id==='hsr'&&options.hsrDef==='derived'&&defender.role==='enemy')return {value:200+10*Math.min(defender.level,100),origin:'derived from enemy level (base level capped at 100)'};
+ if(id==='percent'||id==='poeResistance')return {value:null,origin:'resistance instead of defense'};
+ return {value:defender.defense,origin:'entered'};
+}
+function formulaMetadata(){return Object.values(registry).map(m=>({id:m.id,version:m.version,label:m.label,referenceGame:m.game,classification:m.category,referenceUrls:[...m.referenceUrls],expression:m.expression,roundingPolicy:m.roundingPolicy,parameters:m.params.map(p=>({...p})),inputFlags:{usesLevel:!!m.usesLevel,usesResistance:!!m.usesResistance,usesNegation:!!m.usesNegation,allowsSignedDefense:!!m.signed}}));}
+
+// src/core/calculation.js
+function evaluate(id,a,b,opts){
+ const m=registry[id];if(!m)throw Error('Unknown formula identifier.');
+ const r=m.calc(a,b,opts);
+ if(!Number.isFinite(r.damage)||!Number.isFinite(r.baseline)||r.damage<0)throw Error('Calculation produced an invalid or unsupported number.');
+ if(!Number.isFinite(a.interval)||a.interval<=0||!Number.isFinite(b.hp)||b.hp<0)throw Error('Invalid attack interval or defender HP.');
+ const dps=r.damage/a.interval,aps=1/a.interval,after=Math.max(0,b.hp-r.damage);
+ const hits=b.hp===0?0:r.damage===0?null:Math.ceil(b.hp/r.damage);
+ if(![dps,aps,after].every(Number.isFinite)||(hits!==null&&!Number.isSafeInteger(hits)))throw Error('Result exceeds the supported numeric range.');
+ const difference=r.baseline-r.damage;
+ const effective=effectiveDefense(id,b,opts);
+ const mitigationPercent=r.baseline===0?null:100*difference/r.baseline;
+ const ttkImmediate=hits===null?null:hits===0?0:(hits-1)*a.interval;
+ const ttkDelayed=hits===null?null:hits*a.interval;
+ if((ttkImmediate!==null&&!Number.isFinite(ttkImmediate))||(ttkDelayed!==null&&!Number.isFinite(ttkDelayed)))throw Error('TTK exceeds the supported numeric range.');
+ return {...r,dps,aps,after,hits,difference,referenceDamage:r.baseline,mitigationPercent,effectiveDefense:effective.value,defenseOrigin:effective.origin,ttkImmediate,ttkDelayed,contractVersion:FORMULA_CONTRACT_VERSION,formulaId:id,formulaVersion:m.version,firstHitTiming:{immediate:'Hit 1 at t=0; subsequent hits every interval',delayed:'Hit 1 at t=interval; subsequent hits every interval'}};
+}
+function calculateScenario(state){
+ const {selected,direction,values,params}=state,validated=validateInputs(selected,direction,values,params[selected]);
+ if(validated.errors.length)return {valid:false,errors:validated.errors,dependencies:validated.dependencies,result:null};
+ const {attacker,defender}=validated.dependencies;
+ try{return {valid:true,errors:[],dependencies:validated.dependencies,result:evaluate(selected,validated.data[attacker],validated.data[defender],validated.options)};}
+ catch(error){return {valid:false,errors:[{side:'calculation',key:'result',label:'Calculation',message:error.message}],dependencies:validated.dependencies,result:null};}
+}
+
+// src/analysis/comparison.js
+const METRICS=[['damage','Final damage / hit'],['dps','Theoretical DPS'],['after','Remaining target HP after one hit'],['hits','Hits to defeat'],['aps','Attacks / second'],['referenceDamage','Reference damage'],['difference','Reference minus final damage'],['mitigationPercent','Mitigation (%)'],['effectiveDefense','Effective target DEF'],['ttkImmediate','TTK: first hit immediately (s)'],['ttkDelayed','TTK: first hit after interval (s)']];
+function compare(baseline,current){
+ return METRICS.map(([key,label])=>{
+  const base=baseline?.result?.[key]??null,now=current?.[key]??null;
+  const comparable=typeof base==='number'&&typeof now==='number'&&Number.isFinite(base)&&Number.isFinite(now);
+  return {key,label,baseline:base,current:now,absolute:comparable?now-base:null,relative:comparable&&base!==0?(now-base)/Math.abs(base)*100:null};
+ });
+}
+
+// src/data/project.js
+const APP_ID='universal-combat-lab',SCHEMA_VERSION=1,STORAGE_KEY='universal-combat-lab.project.v1';
+const clone=o=>JSON.parse(JSON.stringify(o));
+const initialParams=()=>Object.fromEntries(Object.values(registry).map(m=>[m.id,Object.fromEntries(m.params.map(p=>[p.id,p.defaultValue]))]));
+function newState(){return {name:'Untitled balance project',selected:'flat',direction:'player',values:clone(defaults),params:initialParams(),baseline:null};}
+function captureBaseline(state,result){if(!result)throw Error('Fix current calculations before capturing a baseline.');return clone({capturedAt:new Date().toISOString(),selected:state.selected,formulaVersion:registry[state.selected].version,direction:state.direction,values:state.values,params:state.params,result});}
+function exportProject(state){return {app:APP_ID,schemaVersion:SCHEMA_VERSION,savedAt:new Date().toISOString(),project:{...clone(state),formulaVersion:registry[state.selected].version}};}
+const scalar=v=>typeof v==='number'&&Number.isFinite(v)||typeof v==='string'&&v.length<=100;
+function readScenario(data){
+ if(!data||typeof data!=='object'||Array.isArray(data)||!registry[data.selected]||!SIDES.includes(data.direction))throw Error('Invalid formula or calculation direction in project.');
+ if(data.formulaVersion!==registry[data.selected].version)throw Error('Formula version is incompatible with this build.');
+ const values={};for(const side of SIDES){values[side]={};for(const k of FIELD_KEYS){const v=data.values?.[side]?.[k];if(!scalar(v))throw Error(`Missing or invalid ${side}.${k}.`);values[side][k]=v;}}
+ const params=initialParams();for(const m of Object.values(registry))for(const p of m.params){const v=data.params?.[m.id]?.[p.id];if(!scalar(v))throw Error(`Missing or invalid setting ${m.id}.${p.id}.`);params[m.id][p.id]=v;}
+ return {selected:data.selected,direction:data.direction,values,params};
+}
+function importProject(payload){
+ if(!payload||payload.app!==APP_ID||payload.schemaVersion!==SCHEMA_VERSION)throw Error('Unsupported file or schema version. Only Universal Combat Lab project schema v1 is supported.');
+ const project=payload.project;if(!project||typeof project.name!=='string'||project.name.length>100)throw Error('Invalid project name.');
+ const state={name:project.name,...readScenario(project),baseline:null};
+ if(project.baseline!==null&&project.baseline!==undefined){
+  const baseline=project.baseline,scenario=readScenario(baseline);
+  if(!Number.isInteger(baseline.formulaVersion)||baseline.formulaVersion!==registry[baseline.selected].version)throw Error('Baseline formula version is incompatible.');
+  if(!baseline.result||typeof baseline.result!=='object'||!Number.isFinite(baseline.result.damage)||!Number.isFinite(baseline.result.dps))throw Error('Baseline result is invalid.');
+  if(typeof baseline.capturedAt!=='string'||!Number.isFinite(Date.parse(baseline.capturedAt)))throw Error('Invalid baseline timestamp.');
+  // Re-evaluate the immutable baseline; never trust cached results from an imported file.
+  const recalculated=calculateScenario(scenario);
+  if(!recalculated.valid)throw Error('Imported baseline has invalid calculation inputs.');
+  for(const key of ['damage','dps','after','hits']){const old=baseline.result[key],fresh=recalculated.result[key];if(old===null&&fresh===null)continue;if(typeof old!=='number'||!Number.isFinite(old)||Math.abs(old-fresh)>1e-9*Math.max(1,Math.abs(fresh)))throw Error('Imported baseline result does not match its saved inputs.');}
+  state.baseline={...scenario,formulaVersion:baseline.formulaVersion,capturedAt:baseline.capturedAt,result:clone(recalculated.result)};
+ }
+ return state;
+}
+function saveLocal(state,storage=globalThis.localStorage){storage.setItem(STORAGE_KEY,JSON.stringify(exportProject(state)));}
+function loadLocal(storage=globalThis.localStorage){const raw=storage.getItem(STORAGE_KEY);return raw?importProject(JSON.parse(raw)):null;}
+function clearLocal(storage=globalThis.localStorage){storage.removeItem(STORAGE_KEY);}
+
+// src/data/csv.js
+function cell(value){
+ if(value===null||value===undefined)return '""';
+ let s=String(value);
+ if(typeof value==='string'&&/^[\s]*[=+@-]/.test(s))s="'"+s; // mitigate spreadsheet formula injection from user text
+ return '"'+s.replaceAll('"','""')+'"';
+}
+function comparisonCsv(state,current){
+ if(!state.baseline||!current)throw Error('Requires a baseline and valid current calculation.');
+ const headers=['Project','Baseline formula ID','Baseline formula version','Baseline direction','Current formula ID','Current formula version','Current direction','Metric','Baseline','Current','Absolute change','Relative change (%)'];
+ const meta=[state.name,state.baseline.selected,state.baseline.formulaVersion,state.baseline.direction,state.selected,registry[state.selected].version,state.direction];
+ const rows=compare(state.baseline,current).map(x=>[...meta,x.label,x.baseline,x.current,x.absolute,x.relative]);
+ return [headers,...rows].map(row=>row.map(cell).join(',')).join('\r\n')+'\r\n';
+}
+
+// src/analysis/sweep.js
+
+const MAX_SWEEP_POINTS=401;
+const SWEEP_METRICS=[['damage','Damage per hit'],['dps','Theoretical DPS'],['hits','Hits to defeat'],['ttkImmediate','TTK · immediate first hit (s)'],['ttkDelayed','TTK · delayed first hit (s)'],['after','Remaining HP after one hit'],['effectiveDefense','Effective target DEF'],['mitigationPercent','Reference reduction (%)']];
+const FIELD_LIMITS={attack:[0,1e9],defense:[-1e9,1e9],hp:[0,1e9],interval:[1e-6,1e6],level:[1,1e6],resistance:[-1000,1000],negation:[0,100]};
+function sweepTargets(state){
+ const {attacker,defender,required,derived}=getDependencies(state.selected,state.direction,state.params[state.selected]);
+ const names={attack:'ATK',defense:'DEF',hp:'HP',interval:'Attack interval',level:'Level',resistance:'Resistance (%)',negation:'Damage negation (%)'};
+ const fields=[];
+ for(const side of ['player','enemy'])for(const key of Object.keys(names))if(required[side].has(key)){
+  const bound=key==='defense'&&!registry[state.selected].signed?[0,1e9]:FIELD_LIMITS[key];
+  fields.push({id:`${side}.${key}`,kind:'field',side,key,label:`${side==='player'?'Player':'Enemy'} · ${names[key]}${derived&&side===defender&&key==='level'?' (drives derived DEF)':''}`,min:bound[0],max:bound[1],integer:key==='level'});
+ }
+ for(const p of registry[state.selected].params)if(p.type!=='select')fields.push({id:`param.${p.id}`,kind:'param',key:p.id,label:`Formula setting · ${p.label}`,min:p.min,max:p.max,integer:false});
+ return fields;
+}
+function targetById(state,id){return sweepTargets(state).find(x=>x.id===id)||null;}
+function currentTargetValue(state,target){return Number(target.kind==='param'?state.params[state.selected][target.key]:state.values[target.side][target.key]);}
+function variantAt(state,target,x){const changed=clone(state);if(target.kind==='param')changed.params[changed.selected][target.key]=x;else changed.values[target.side][target.key]=x;return changed;}
+function evaluateAt(state,target,x){return calculateScenario(variantAt(state,target,x));}
+function validateRange(target,min,max,step){
+ if(!target)throw Error('Choose an input used by the selected formula.');
+ if(![min,max,step].every(Number.isFinite)||step<=0||min>max)throw Error('Range requires finite values, minimum ≤ maximum, and a positive step.');
+ if(min<target.min||max>target.max)throw Error(`Range for ${target.label} must be within ${target.min}–${target.max}.`);
+ if(target.integer&&(!Number.isInteger(min)||!Number.isInteger(max)||!Number.isInteger(step)))throw Error('Level ranges must use whole numbers.');
+ const count=Math.floor((max-min)/step+1e-9)+1;
+ if(count<1||count>MAX_SWEEP_POINTS)throw Error(`Sweep exceeds ${MAX_SWEEP_POINTS} samples. Increase the step size or narrow the range.`);
+ return count;
+}
+function runSweep(state,{targetId,min,max,step,baseline=null}){
+ const target=targetById(state,targetId),count=validateRange(target,min,max,step);
+ if(!calculateScenario(state).valid)throw Error('Current calculation is invalid. Correct it before running a sweep.');
+ let reference=null,referenceTarget=null,referenceNote='';
+ if(baseline){reference=clone(baseline);referenceTarget=targetById(reference,targetId);if(!referenceTarget){reference=null;referenceNote='Saved baseline does not use this sweep variable; baseline overlay omitted.';}else if(target.kind==='param'&&state.selected!==reference.selected){reference=null;referenceNote='Formula settings differ between saved baseline and current formula; overlay omitted.';}}
+ const rows=[];
+ for(let i=0;i<count;i++){
+  const x=Number((min+i*step).toPrecision(14));const calc=evaluateAt(state,target,x);
+  const old=reference?evaluateAt(reference,referenceTarget,x):null;
+  rows.push({x,valid:calc.valid,result:calc.result,errors:calc.errors.map(x=>x.message),baselineValid:old?old.valid:false,baseline:old?.result??null,baselineErrors:old?.errors.map(x=>x.message)??[]});
+ }
+ const validCount=rows.filter(r=>r.valid).length;
+ if(!validCount)throw Error('No valid calculation within the selected range.');
+ return {target,config:{targetId,min,max,step,formulaId:state.selected,formulaVersion:registry[state.selected].version,direction:state.direction},rows,validCount,referenceNote,baselineFormula:reference?{id:reference.selected,version:registry[reference.selected].version,direction:reference.direction}:null};
+}
+const sweepNumber=v=>typeof v==='number'&&Number.isFinite(v)?v:'';
+const csvSafe=v=>typeof v==='number'&&Number.isFinite(v)?`"${v}"`:`"${String(v??'').replace(/^[=+@\-\t\r]/,'\u0027$&').replaceAll('"','""')}"`;
+function sweepCsv(sweep){const cols=['Formula ID','Formula version','Direction','Sweep input','Input value','Valid','Error',...SWEEP_METRICS.map(x=>x[1]),'Baseline formula ID','Baseline formula version','Baseline direction',...SWEEP_METRICS.map(x=>'Baseline '+x[1])];return '\ufeff'+[cols,...sweep.rows.map(r=>[sweep.config.formulaId,sweep.config.formulaVersion,sweep.config.direction,sweep.target.id,r.x,r.valid,r.errors.join('; '),...SWEEP_METRICS.map(([k])=>sweepNumber(r.result?.[k])),sweep.baselineFormula?.id??'',sweep.baselineFormula?.version??'',sweep.baselineFormula?.direction??'',...SWEEP_METRICS.map(([k])=>sweepNumber(r.baseline?.[k]))])].map(row=>row.map(csvSafe).join(',')).join('\r\n')+'\r\n';}
+
+// src/analysis/breakpoints.js
+function hits(r){return r?.hits===null?Infinity:r?.hits;}
+function readable(n){return Number.isFinite(n)?n:'∞';}
+// Only detects transitions bracketed by the chosen sample resolution; an interval can hide more than one threshold.
+function findBreakpoints(sweep,state,{limit=45}={}){
+ const points=[];let omitted=0;const {rows,target}=sweep;
+ for(let i=1;i<rows.length;i++){
+  const left=rows[i-1],right=rows[i];if(!left.valid||!right.valid)continue;
+  const old=hits(left.result),now=hits(right.result);
+  const dead0=left.result.damage===0,dead1=right.result.damage===0;
+  if(old===now&&dead0===dead1)continue;
+  const kinds=[];if(old!==now)kinds.push(`Hits to defeat: ${readable(old)} → ${readable(now)}`);if(dead0!==dead1)kinds.push(`Damage ${dead1?'reaches':'leaves'} zero`);
+  let estimate=null;let uncertainty='Sampled bracket only';
+  // Refine a single hit-count boundary. With multi-jump intervals, do not imply an exact solution.
+  if(old!==now&&Math.abs(old-now)===1&&Number.isFinite(old)&&Number.isFinite(now)&&!target.integer){
+   let lo=left.x,hi=right.x;
+   for(let j=0;j<44;j++){
+    const mid=(lo+hi)/2;if(mid===lo||mid===hi)break;
+    const check=evaluateAt(state,target,mid);if(!check.valid)break;
+    if(hits(check.result)===old)lo=mid;else hi=mid;
+   }
+   estimate=hi;uncertainty='Numerical estimate; verify rounding-sensitive formulas';
+  }else if(target.integer&&right.x-left.x===1){estimate=right.x;uncertainty='First sampled integer level';}
+  if(points.length<limit)points.push({from:left.x,to:right.x,description:kinds.join(' · '),estimate,uncertainty});else omitted++;
+ }
+ return {points,omitted,note:'Only transitions between adjacent valid samples are detected. Coarse steps may miss or combine breakpoints; use smaller steps for precision.'};
+}
+
+// src/analysis/solver.js
+const SOLVER_METRICS=[['damage','Damage per hit'],['dps','Theoretical DPS'],['hits','Hits to defeat'],['ttkImmediate','TTK · immediate first hit (s)'],['ttkDelayed','TTK · delayed first hit (s)']];
+const N=400;
+const candidate=(out,metric,threshold,mode)=>{const value=out.valid?out.result?.[metric]:null;return typeof value==='number'&&Number.isFinite(value)?{valid:true,value,pass:mode==='atLeast'?value>=threshold-1e-10*Math.max(1,Math.abs(threshold)):value<=threshold+1e-10*Math.max(1,Math.abs(threshold))}:{valid:false,value:null,pass:false};};
+function solveTarget(state,{targetId,metric,threshold,mode,min,max}){
+ const target=targetById(state,targetId);
+ if(!target)throw Error('Choose an input used by the selected formula.');
+ if(!calculateScenario(state).valid)throw Error('Current calculation is invalid. Correct it before reverse-solving.');
+ if(!SOLVER_METRICS.some(x=>x[0]===metric)||!['atLeast','atMost'].includes(mode))throw Error('Invalid target metric or threshold direction.');
+ if(!Number.isFinite(threshold)||threshold<0)throw Error('Target must be a finite, non-negative value.');
+ if(metric==='hits'&&!Number.isInteger(threshold))throw Error('Target hit counts must be whole numbers.');
+ if(![min,max].every(Number.isFinite)||min>max||min<target.min||max>target.max)throw Error(`Search bounds must be finite and within ${target.min}–${target.max}.`);
+ if(target.integer&&(!Number.isInteger(min)||!Number.isInteger(max)))throw Error('Level bounds must be whole numbers.');
+ const current=currentTargetValue(state,target);
+ const sample=[];const count=target.integer?Math.min(N+1,max-min+1):N+1;
+ for(let i=0;i<count;i++){
+  const x=target.integer?Math.round(min+(max-min)*(count===1?0:i/(count-1))):min+(max-min)*i/N;
+  if(sample.length&&x===sample[sample.length-1].x)continue;
+  sample.push({x,...candidate(evaluateAt(state,target,x),metric,threshold,mode)});
+ }
+ if(target.integer&&sample.length&&sample[sample.length-1].x!==max)sample.push({x:max,...candidate(evaluateAt(state,target,max),metric,threshold,mode)});
+ const evaluatedCurrent=current>=min&&current<=max?{x:current,...candidate(evaluateAt(state,target,current),metric,threshold,mode)}:null;
+ if(evaluatedCurrent?.pass)return {found:true,target,metric,threshold,mode,value:current,achieved:evaluatedCurrent.value,current,method:'Current value already satisfies the requested threshold.',approximate:false,samples:sample.length};
+ let solutions=sample.filter(x=>x.pass);
+ // Refine qualifying/non-qualifying boundaries, without treating the formula as globally monotonic.
+ for(let i=1;i<sample.length;i++){
+  const a=sample[i-1],b=sample[i];if(!a.valid||!b.valid||a.pass===b.pass)continue;
+  let l=a,r=b;
+  if(target.integer){
+   let lo=Math.floor(a.x),hi=Math.ceil(b.x);if(hi-lo<=1)continue;
+   for(let j=0;j<45&&hi-lo>1;j++){
+    const x=Math.floor((lo+hi)/2);const v={x,...candidate(evaluateAt(state,target,x),metric,threshold,mode)};if(!v.valid)break;
+    if(v.pass===a.pass)lo=x;else hi=x;
+   }
+   const x=a.pass?lo:hi,v={x,...candidate(evaluateAt(state,target,x),metric,threshold,mode)};if(v.pass)solutions.push(v);
+  }else{
+   for(let j=0;j<44;j++){
+    const x=(l.x+r.x)/2;if(x===l.x||x===r.x)break;
+    const v={x,...candidate(evaluateAt(state,target,x),metric,threshold,mode)};if(!v.valid)break;
+    if(v.pass===a.pass)l=v;else r=v;
+   }
+   solutions.push(a.pass?l:r);
+  }
+ }
+ if(!solutions.length){
+  const nearest=sample.filter(x=>x.valid).sort((a,b)=>Math.abs(a.value-threshold)-Math.abs(b.value-threshold))[0];
+  return {found:false,target,metric,threshold,mode,current,nearest:nearest?{value:nearest.x,achieved:nearest.value}:null,samples:sample.length,reason:'No qualifying value found in the sampled range. A narrow or non-monotonic solution might require a tighter search interval.'};
+ }
+ solutions.sort((a,b)=>Math.abs(a.x-current)-Math.abs(b.x-current)||a.x-b.x);const best=solutions[0];
+ return {found:true,target,metric,threshold,mode,value:best.x,achieved:best.value,current,method:'Nearest sampled qualifying value, with refinement at detected boundaries.',approximate:!target.integer,samples:sample.length,warning:'Threshold search, not an exact inverse. Floors, discontinuities and non-monotonic formulas can require a narrower range to locate additional solutions.'};
+}
+
+// src/battle/ab.js
+
+// Only accepts the captured baseline and the current scenario. No independent battle roster.
+const BATTLE_DEFAULTS=Object.freeze({firstHit:'immediate',maxTime:120,maxAttacks:1000});
+function finiteBetween(v,min,max,label){const n=Number(v);if(!Number.isFinite(n)||n<min||n>max)throw Error(`${label} must be between ${min} and ${max}.`);return n;}
+function validateBattleOptions(raw={}){
+ const firstHit=raw.firstHit??BATTLE_DEFAULTS.firstHit;
+ if(!['immediate','delayed'].includes(firstHit))throw Error('Invalid first-hit timing.');
+ const maxTime=finiteBetween(raw.maxTime??BATTLE_DEFAULTS.maxTime,0.001,3600,'Time cap');
+ const maxAttacks=finiteBetween(raw.maxAttacks??BATTLE_DEFAULTS.maxAttacks,1,5000,'Attack cap');
+ if(!Number.isSafeInteger(maxAttacks))throw Error('Attack cap must be a whole number.');
+ return {firstHit,maxTime,maxAttacks};
+}
+function prepareBattle(scenario){
+ if(!scenario||typeof scenario!=='object')throw Error('Missing scenario.');
+ const forward=calculateScenario({...scenario,direction:'player'});
+ const reverse=calculateScenario({...scenario,direction:'enemy'});
+ if(!forward.valid||!reverse.valid){
+  const entries=[...(!forward.valid?forward.errors.map(e=>'Player → Enemy: '+e.message):[]),...(!reverse.valid?reverse.errors.map(e=>'Enemy → Player: '+e.message):[])];
+  throw Error(entries.join('; '));
+ }
+ const hpPlayer=Number(scenario.values.player.hp),hpEnemy=Number(scenario.values.enemy.hp);
+ if(!Number.isFinite(hpPlayer)||hpPlayer<0||!Number.isFinite(hpEnemy)||hpEnemy<0)throw Error('Both combatants need valid HP.');
+ // The directional calculator validates the defender HP, so both directions are required.
+ return {formulaId:scenario.selected,formulaVersion:forward.result.formulaVersion,player:{hp:hpPlayer,damage:forward.result.damage,interval:Number(scenario.values.player.interval),result:forward.result},enemy:{hp:hpEnemy,damage:reverse.result.damage,interval:Number(scenario.values.enemy.interval),result:reverse.result}};
+}
+function outcome(player,enemy){if(player<=0&&enemy<=0)return 'mutual-ko';if(enemy<=0)return 'player-win';if(player<=0)return 'enemy-win';return null;}
+function runBattle(scenario,settings={}){
+ const opts=validateBattleOptions(settings),prep=prepareBattle(scenario);
+ let playerHp=prep.player.hp,enemyHp=prep.enemy.hp,attacks=0;
+ const events=[{time:0,playerHp,enemyHp,playerAttack:false,enemyAttack:false,playerDamage:0,enemyDamage:0,attackCount:0}];
+ let result=outcome(playerHp,enemyHp),endedAt=0;
+ if(!result&&prep.player.damage===0&&prep.enemy.damage===0)result='stalemate';
+ const first=opts.firstHit==='immediate'?0:1;
+ let playerTick=first,enemyTick=first;
+ const tolerance=Math.min(prep.player.interval,prep.enemy.interval)*1e-7;
+ while(!result){
+  const pTime=playerTick*prep.player.interval,eTime=enemyTick*prep.enemy.interval,t=Math.min(pTime,eTime);
+  if(!Number.isFinite(t)||t>opts.maxTime+Math.min(tolerance,opts.maxTime*1e-10)){result='time-cap';endedAt=opts.maxTime;break;}
+  const pHit=Math.abs(pTime-t)<=tolerance,eHit=Math.abs(eTime-t)<=tolerance,needed=Number(pHit)+Number(eHit);
+  if(attacks+needed>opts.maxAttacks){result='attack-cap';endedAt=events.at(-1).time;break;}
+  // Resolve timestamp ties atomically: both attacks land even if one combatant is KO'd by the other.
+  const pDamage=pHit?Math.min(enemyHp,prep.player.damage):0,eDamage=eHit?Math.min(playerHp,prep.enemy.damage):0;
+  const nextP=Math.max(0,playerHp-eDamage),nextE=Math.max(0,enemyHp-pDamage);
+  if(pHit)playerTick++;if(eHit)enemyTick++;attacks+=needed;
+  playerHp=nextP;enemyHp=nextE;endedAt=t;
+  events.push({time:t,playerHp,enemyHp,playerAttack:pHit,enemyAttack:eHit,playerDamage:pDamage,enemyDamage:eDamage,attackCount:attacks});
+  result=outcome(playerHp,enemyHp);
+ }
+ return {config:opts,formulaId:prep.formulaId,formulaVersion:prep.formulaVersion,stats:prep,initial:{playerHp:prep.player.hp,enemyHp:prep.enemy.hp},events,outcome:result,endedAt,attacks,final:{playerHp,enemyHp},resolved:['player-win','enemy-win','mutual-ko','stalemate'].includes(result)};
+}
+function runAB(baseline,current,options={}){
+ if(!baseline)throw Error('Capture a baseline in the Balancing Workspace first.');
+ const a=runBattle(clone(baseline),options),b=runBattle(clone(current),options);
+ return {a,b,formulaChanged:baseline.selected!==current.selected,formulaA:baseline.selected,formulaB:current.selected,settings:a.config,delta:{endTime:b.endedAt-a.endedAt,playerHp:b.final.playerHp-a.final.playerHp,enemyHp:b.final.enemyHp-a.final.enemyHp}};
+}
+function frameAt(battle,time){
+ const t=Math.max(0,Math.min(Number.isFinite(time)?time:0,Math.max(battle.endedAt,0)));
+ let low=0,high=battle.events.length-1;
+ while(low<high){const mid=Math.ceil((low+high)/2);if(battle.events[mid].time<=t+1e-12)low=mid;else high=mid-1;}
+ const event=battle.events[low];
+ return {time:t,index:low,event,playerHp:event.playerHp,enemyHp:event.enemyHp,finished:battle.outcome==='stalemate'||t>=battle.endedAt-1e-12};
+}
+function battleTimeline(ab){return Array.from(new Set([...ab.a.events,...ab.b.events].map(x=>x.time))).sort((a,b)=>a-b);}
+
+// src/ui/app.js
+const $=id=>document.getElementById(id);
+let state=newState(),latest=null,autosaveAvailable=true,lastSweep=null,lastSolution=null;
+let activeTab='calculator',lastBattle=null,battleTime=0,battlePlaying=false,battleLastFrame=null,battleMax=0,battleToken=0;
+function el(tag,attrs={},text=''){const node=document.createElement(tag);for(const [k,v]of Object.entries(attrs)){if(k==='className')node.className=v;else node.setAttribute(k,String(v));}if(text!==null&&text!=='')node.textContent=text;return node;}
+function buildProfiles(){for(const side of ['player','enemy']){const root=$(`${side}-fields`);for(const [key,label,help]of fields){const wrap=el('div',{className:'field-wrap',id:`${side}-${key}-wrap`});const labelNode=el('label',{for:`${side}-${key}`},label);const input=el('input',{id:`${side}-${key}`,type:'number',step:'any',inputmode:'decimal',value:state.values[side][key]});const note=el('div',{className:'field-note',id:`${side}-${key}-note`},help);input.addEventListener('input',()=>{state.values[side][key]=input.value;refresh();persist();});wrap.append(labelNode,input,note);root.append(wrap);}}}
+function buildOptions(){const select=$('formula-select');for(const m of models)select.append(el('option',{value:m.id},m.label));select.addEventListener('change',()=>{state.selected=select.value;renderFormula();refresh();persist();});}
+function renderContext(){const formula=registry[state.selected];$('context-formula').textContent=formula?.label||'—';$('context-baseline').textContent=state.baseline?'Captured · A ready':'Not captured';$('context-baseline').classList.toggle('context-ready',!!state.baseline);$('context-project').textContent=state.name||'Untitled balance project';}
+function renderFormula(){const m=registry[state.selected];$('formula-select').value=state.selected;const meta=$('formula-meta');meta.replaceChildren();meta.append(el('strong',{},m.label),el('span',{className:`tag ${m.category==='Simplified reference'?'simplified':''}`},`${m.category} · formula v${m.version}`),el('p',{style:'margin:8px 0'},m.summary),el('a',{href:sources[m.source],target:'_blank',rel:'noopener noreferrer'},'Mechanics reference ↗'));if(m.source2)meta.append(document.createTextNode(' · '),el('a',{href:sources[m.source2],target:'_blank',rel:'noopener noreferrer'},'Second reference ↗'));
+ const root=$('formula-params');root.replaceChildren();for(const p of m.params){const w=el('div',{className:'field-wrap'}),l=el('label',{for:`param-${p.id}`},p.label);let input;if(p.type==='select'){input=el('select',{id:`param-${p.id}`});for(const [v,t]of p.options)input.append(el('option',{value:v},t));}else input=el('input',{id:`param-${p.id}`,type:'number',step:'any',min:p.min,max:p.max,inputmode:'decimal'});input.value=state.params[m.id][p.id];const edit=()=>{state.params[m.id][p.id]=input.value;refresh();persist();};input.addEventListener('input',edit);input.addEventListener('change',edit);w.append(l,input);if(p.help)w.append(el('div',{className:'field-note'},p.help));root.append(w);}
+ $('formula-warning').textContent=(m.id==='genshin'||m.id==='hsr')?'Auto-derived DEF applies only when the Enemy is the defender. The editable manual value is preserved; reverse calculations use entered Player DEF.':m.id==='pokemon'?'Attack interval supplies an illustrative DPS conversion, not Pokémon turn timing.':m.id==='elden'?'Single damage channel and a separate damage negation percentage.':'Only required fields affect the selected calculation.';
+ for(const side of ['player','enemy'])for(const key of ['level','resistance','negation'])$(`${side}-${key}-wrap`).hidden=!(key==='level'?m.usesLevel:key==='resistance'?m.usesResistance:m.usesNegation);
+ $('formula-status').textContent=m.category;renderAnalysisTargets();renderContext();
+}
+function syncDefense(){const m=registry[state.selected],key=state.selected==='genshin'?'genshinDef':'hsrDef';const derived=(state.selected==='genshin'||state.selected==='hsr')&&state.direction==='player'&&state.params[state.selected][key]==='derived';const input=$('enemy-defense'),note=$('enemy-defense-note');input.disabled=derived;if(derived){const text=String(state.values.enemy.level).trim(),lv=Number(text),valid=text!==''&&Number.isInteger(lv)&&lv>=1&&lv<=1000000;input.value=valid?(state.selected==='genshin'?5*lv+500:200+10*Math.min(lv,100)):'';note.textContent=state.selected==='genshin'?'Auto-derived: 5 × Enemy Level + 500. Manual value retained.':'Auto-derived: 200 + 10 × min(Enemy Level, 100). Manual value retained.';}else{input.value=state.values.enemy.defense;note.textContent='Physical / relevant defense';}}
+function showInvalid(errors,dep){$('error-banner').hidden=false;$('error-banner').textContent='Correct these inputs: '+errors.map(e=>e.message).join('; ')+'.';for(const id of ['damage','dps','remaining-hp','hits','baseline','blocked','attacks-sec','effective-defense','mitigation-percent','ttk-immediate','ttk-delayed'])$(id).textContent='—';$('formula-code').textContent='Correct the highlighted values to calculate.';$('formula-trace').replaceChildren();$('output-note').textContent='';$('hit-note').textContent='No valid result';}
+function renderValidation(outcome){const invalid=new Set(outcome.errors.map(e=>e.side+':'+e.key));for(const side of ['player','enemy'])for(const [key,label,help]of fields){const field=$(`${side}-${key}`),note=$(`${side}-${key}-note`),isInvalid=invalid.has(side+':'+key);field.setAttribute('aria-invalid',String(isInvalid));note.classList.toggle('error',isInvalid);if(isInvalid)note.textContent=`Enter a valid ${label.toLowerCase()}.`;else if(key!=='defense'||side!=='enemy'||!outcome.dependencies.derived)note.textContent=help;}
+ for(const p of registry[state.selected].params)$(`param-${p.id}`).setAttribute('aria-invalid',String(invalid.has('formula:'+p.id)));}
+function renderComparison(){renderContext();const has=!!state.baseline;$('baseline-restore').disabled=!has;$('baseline-clear').disabled=!has;$('compare-export').disabled=!has||!latest;
+ const body=$('comparison-body');body.replaceChildren();if(!has){$('baseline-status').textContent='No baseline captured. Capture a valid calculation to compare.';body.append(el('tr',{},null));body.firstChild.append(el('td',{colspan:5},'Capture a valid baseline to compare.'));return;}
+ const b=state.baseline,differ=b.selected!==state.selected||b.direction!==state.direction;
+ $('baseline-status').textContent=`Baseline: ${registry[b.selected].label} (v${b.formulaVersion}), ${b.direction==='player'?'Player → Enemy':'Enemy → Player'}, captured ${b.capturedAt}.${differ?' Current formula/direction differs; results remain comparable numerically but use different contexts.':''}`;
+ if(!latest){const row=el('tr');row.append(el('td',{colspan:5},'Current calculation is invalid. Correct its inputs to compare.'));body.append(row);return;}
+ for(const x of compare(b,latest)){const row=el('tr');const values=[x.label,x.baseline,x.current,x.absolute,x.relative];for(let i=0;i<values.length;i++){let value=i===0?values[i]:(values[i]===null?'N/A':i===4?`${fmt(values[i],2)}%`:fmt(values[i]));row.append(el('td',{className:i===3?'difference':''},value));}body.append(row);}
+}
+function refresh(){invalidateBattle('Inputs changed. Recalculate the A/B battle to compare the latest values.');invalidateAnalysis('Current inputs changed. Run the sweep or solver again.');syncDefense();const forward=state.direction==='player';$('player-to-enemy').setAttribute('aria-pressed',String(forward));$('enemy-to-player').setAttribute('aria-pressed',String(!forward));$('direction-label').textContent=forward?'PLAYER → ENEMY':'ENEMY → PLAYER';const outcome=calculateScenario(state);renderValidation(outcome);latest=outcome.valid?outcome.result:null;
+ if(!outcome.valid){showInvalid(outcome.errors,outcome.dependencies);renderComparison();return;}
+ const r=latest;$('error-banner').hidden=true;$('damage').textContent=fmt(r.damage);$('dps').textContent=fmt(r.dps);$('remaining-hp').textContent=fmt(r.after);$('hits').textContent=r.hits===null?'N/A':fmt(r.hits,0);$('hit-note').textContent=r.hits===null?'No damage at these values':'Mathematical hit count';$('baseline').textContent=fmt(r.baseline);$('blocked').textContent=(r.difference<0?'−':'')+fmt(Math.abs(r.difference));$('attacks-sec').textContent=fmt(r.aps);$('effective-defense').textContent=r.effectiveDefense===null?'Not applicable':`${fmt(r.effectiveDefense)} (${r.defenseOrigin})`;$('mitigation-percent').textContent=r.mitigationPercent===null?'N/A':fmt(r.mitigationPercent,2)+'%';$('ttk-immediate').textContent=r.ttkImmediate===null?'N/A':fmt(r.ttkImmediate)+'s';$('ttk-delayed').textContent=r.ttkDelayed===null?'N/A':fmt(r.ttkDelayed)+'s';$('formula-code').textContent=r.expression;$('formula-trace').replaceChildren(...r.trace.map(s=>el('li',{},s)));$('output-note').textContent=r.note||'Fixed deterministic damage per hit; no combat simulation.';renderComparison();}
+function persist(){renderContext();if(!autosaveAvailable)return;try{saveLocal(state);$('autosave-status').textContent='Local autosave: saved in this browser.';}catch(error){autosaveAvailable=false;$('autosave-status').textContent='Local autosave unavailable (browser storage restriction or quota). Use Export project JSON.';}}
+function hydrate(next){state=next;$('project-name').value=state.name;for(const side of ['player','enemy'])for(const [key]of fields)$(`${side}-${key}`).value=state.values[side][key];renderFormula();refresh();}
+function download(filename,content,type){const url=URL.createObjectURL(new Blob([content],{type})),a=el('a',{href:url,download:filename});document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);}
+function safeName(name){return (name.replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'')||'combat-lab').slice(0,64);}
+
+function invalidateAnalysis(message){
+ lastSweep=null;lastSolution=null;$('sweep-export').disabled=true;$('solve-apply').disabled=true;
+ $('sweep-chart').textContent='Run a valid sweep to plot the results.';$('sweep-body').replaceChildren();
+ const row=el('tr');row.append(el('td',{colspan:8},'No current sweep results.'));$('sweep-body').append(row);
+ $('breakpoint-results').replaceChildren();$('breakpoint-note').textContent='Run a sweep to inspect sampled transitions.';
+ if(message){$('sweep-status').textContent=message;$('solve-result').textContent=message;}
+}
+function numericFieldValue(id){const value=String($(id).value).trim();return value===''?NaN:Number(value);}
+function chooseAnalysisRange(id,kind){const target=targetById(state,id);if(!target)return;
+ const current=currentTargetValue(state,target),v=Number.isFinite(current)?current:Math.max(target.min,1);
+ let min,max,step;
+ if(target.key==='level'){min=Math.max(1,Math.floor(v-10));max=Math.min(target.max,Math.ceil(v+20));step=1;}
+ else if(target.key==='interval'){min=Math.max(target.min,0.25);max=Math.min(target.max,Math.max(v*2,3));step=0.25;}
+ else if(target.key==='resistance'){min=Math.max(target.min,-100);max=Math.min(target.max,100);step=10;}
+ else if(target.key==='negation'){min=Math.max(target.min,0);max=Math.min(target.max,100);step=5;}
+ else{const spread=Math.max(10,Math.abs(v)*0.6);min=Math.max(target.min,Math.floor((v-spread)*100)/100);max=Math.min(target.max,Math.ceil((v+spread)*100)/100);step=Number(((max-min)/30||1).toPrecision(2));}
+ if(min===max){max=Math.min(target.max,min+(target.integer?1:1));}
+ $(kind+'-min').value=min;$(kind+'-max').value=max;if(kind==='sweep')$(kind+'-step').value=step;
+}
+function renderAnalysisTargets(){
+ const all=sweepTargets(state);for(const [selectId,pref] of [['sweep-target','enemy.defense'],['solve-variable','player.attack']]){
+  const select=$(selectId),old=select.value;select.replaceChildren(...all.map(t=>el('option',{value:t.id},t.label)));
+  select.value=all.some(t=>t.id===old)?old:all.some(t=>t.id===pref)?pref:all.some(t=>t.id==='enemy.level')?'enemy.level':all[0]?.id||'';
+  chooseAnalysisRange(select.value,selectId==='sweep-target'?'sweep':'solve');
+ }
+}
+function svgEl(tag,attrs={},label){const node=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [key,value]of Object.entries(attrs))node.setAttribute(key,String(value));if(label!==undefined)node.textContent=label;return node;}
+function renderCurve(){const root=$('sweep-chart');root.replaceChildren();if(!lastSweep)return;
+ const metric=$('sweep-metric').value, rows=lastSweep.rows;
+ const all=rows.flatMap(r=>[r.valid?r.result?.[metric]:null,r.baselineValid?r.baseline?.[metric]:null]).filter(v=>typeof v==='number'&&Number.isFinite(v));
+ if(!all.length){root.textContent='No finite values for this metric in the selected range.';return;}
+ const xLo=rows[0].x,xHi=rows.at(-1).x,minimum=Math.min(...all),maximum=Math.max(...all),pad=(maximum-minimum||1)*.12,yLo=minimum-pad,yHi=maximum+pad;
+ const width=960,height=310,left=73,right=18,top=24,bottom=52,plotW=width-left-right,plotH=height-top-bottom;
+ const px=x=>left+(x-xLo)/(xHi-xLo||1)*plotW,py=y=>top+(yHi-y)/(yHi-yLo)*plotH;
+ const svg=svgEl('svg',{viewBox:`0 0 ${width} ${height}`,role:'img','aria-label':`${$('sweep-metric').selectedOptions[0].textContent} across ${lastSweep.target.label}`});
+ for(let t=0;t<=4;t++){const yy=top+t*plotH/4,v=yHi-t*(yHi-yLo)/4;svg.append(svgEl('line',{x1:left,x2:width-right,y1:yy,y2:yy,class:'gridline'}),svgEl('text',{x:left-9,y:yy+4,'text-anchor':'end'},fmt(v,2)));}
+ svg.append(svgEl('line',{x1:left,x2:left,y1:top,y2:top+plotH,class:'axis'}),svgEl('line',{x1:left,x2:width-right,y1:top+plotH,y2:top+plotH,class:'axis'}));
+ for(let t=0;t<=4;t++){const x=xLo+(xHi-xLo)*t/4;svg.append(svgEl('text',{x:px(x),y:height-bottom+20,'text-anchor':'middle'},fmt(x,3)));}
+ svg.append(svgEl('text',{x:width/2,y:height-7,'text-anchor':'middle'},lastSweep.target.label));
+ const draw=(key,validKey,klass)=>{let segment=[];const flush=()=>{if(segment.length){svg.append(svgEl('polyline',{points:segment.join(' '),class:klass}));segment=[];}};for(const r of rows){const v=r[key]?.[metric];if(!r[validKey]||typeof v!=='number'||!Number.isFinite(v)){flush();continue;}segment.push(`${px(r.x)},${py(v)}`);}flush();};
+ if(lastSweep.baselineFormula)draw('baseline','baselineValid','baseline-line');draw('result','valid','current-line');
+ root.append(svg);
+ $('sweep-chart-note').textContent=`Solid green: current ${lastSweep.config.formulaId} · ${metric}. ${lastSweep.baselineFormula?'Dashed blue: saved baseline '+lastSweep.baselineFormula.id+'. ':''}${lastSweep.referenceNote} Invalid/nonfinite points are omitted; chart values are analytical, not battle events.`;
+}
+function renderSweep(){const s=lastSweep;if(!s)return;
+ const root=$('sweep-body');root.replaceChildren();for(const r of s.rows){const tr=el('tr');const cell=x=>tr.append(el('td',{},x));cell(fmt(r.x,4));for(const v of [r.result?.damage,r.result?.dps,r.result?.hits,r.result?.ttkImmediate,r.baseline?.damage,r.baseline?.dps])cell(v===null||v===undefined?'N/A':fmt(v,4));cell(r.valid?(s.baselineFormula&&!r.baselineValid?'Baseline invalid':'OK'):r.errors.join('; '));root.append(tr);}
+ $('sweep-status').textContent=`${s.rows.length} sampled values; ${s.validCount} valid current calculations. ${s.referenceNote} ${s.baselineFormula?'Baseline overlay: '+s.baselineFormula.id+'.':''}`;
+ $('sweep-export').disabled=false;renderCurve();const bp=findBreakpoints(s,state);$('breakpoint-note').textContent=`${bp.points.length} sampled transition bracket(s)${bp.omitted?`, ${bp.omitted} additional omitted`:''}. ${bp.note}`;
+ const box=$('breakpoint-results');box.replaceChildren(...bp.points.map(p=>el('div',{className:'breakpoint-item'},`${p.description} · Input ${fmt(p.from,5)} to ${fmt(p.to,5)}${p.estimate!==null?' · Estimated threshold ≈ '+fmt(p.estimate,6):''}. ${p.uncertainty}.`)));
+ if(!bp.points.length)box.append(el('p',{className:'small'},'No sampled hit-count or zero-damage transitions across this range.'));
+}
+function setupAnalytics(){
+ for(const [id,label]of SWEEP_METRICS)$('sweep-metric').append(el('option',{value:id},label));
+ for(const [id,label]of SOLVER_METRICS)$('solve-metric').append(el('option',{value:id},label));
+ $('sweep-metric').value='damage';$('solve-metric').value='dps';
+ $('sweep-target').addEventListener('change',()=>{chooseAnalysisRange($('sweep-target').value,'sweep');invalidateAnalysis('Sweep input changed. Run the sweep again.');});
+ $('solve-variable').addEventListener('change',()=>{chooseAnalysisRange($('solve-variable').value,'solve');lastSolution=null;$('solve-apply').disabled=true;});
+ $('sweep-metric').addEventListener('change',renderCurve);
+ $('sweep-run').addEventListener('click',()=>{try{lastSweep=runSweep(state,{targetId:$('sweep-target').value,min:numericFieldValue('sweep-min'),max:numericFieldValue('sweep-max'),step:numericFieldValue('sweep-step'),baseline:state.baseline});renderSweep();}catch(error){invalidateAnalysis('Sweep rejected: '+error.message);}});
+ $('sweep-export').addEventListener('click',()=>{if(lastSweep)download(`${safeName(state.name)}_sweep.csv`,sweepCsv(lastSweep),'text/csv;charset=utf-8');});
+ $('solve-run').addEventListener('click',()=>{try{lastSolution=solveTarget(state,{targetId:$('solve-variable').value,metric:$('solve-metric').value,threshold:numericFieldValue('solve-threshold'),mode:$('solve-mode').value,min:numericFieldValue('solve-min'),max:numericFieldValue('solve-max')});const s=lastSolution;$('solve-apply').disabled=!s.found;$('solve-result').textContent=s.found?`Qualifying ${s.target.label}: ${fmt(s.value,6)} (current ${fmt(s.current,6)}). Achieved ${s.metric}: ${fmt(s.achieved,6)}. ${s.method} ${s.warning||''}`:`No qualifying solution: ${s.reason} ${s.nearest?'Nearest sampled: input '+fmt(s.nearest.value,5)+' → '+fmt(s.nearest.achieved,5):''}`;}catch(error){lastSolution=null;$('solve-apply').disabled=true;$('solve-result').textContent='Solver rejected: '+error.message;}});
+ $('solve-apply').addEventListener('click',()=>{if(!lastSolution?.found)return;const t=targetById(state,lastSolution.target.id);if(!t){$('solve-result').textContent='Inputs changed; solve again.';return;}const value=Number(lastSolution.value.toPrecision(14));if(t.kind==='param'){state.params[state.selected][t.key]=String(value);$(`param-${t.key}`).value=String(value);}else{state.values[t.side][t.key]=String(value);$(`${t.side}-${t.key}`).value=String(value);}refresh();persist();$('solve-result').textContent=`Applied ${t.label} = ${value}. Re-run the solver to inspect another target.`;});
+}
+
+// Tabs keep one shared calculator/project state; changing tabs cannot create independent combat inputs.
+const TAB_IDS=['calculator','workspace','analytics','battle'];
+function selectTab(id,focus=false){if(!TAB_IDS.includes(id))return;activeTab=id;
+ for(const key of TAB_IDS){const active=key===id,tab=$(`nav-${key}`),panel=$(`tab-${key}`);tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;panel.hidden=!active;}
+ if(id==='battle'&&!lastBattle){$('battle-status').textContent=state.baseline?'Baseline available. Calculate the A/B battle using your saved and current values.':'Capture a valid baseline in Balancing Workspace first.';}
+ if(focus)$(`nav-${id}`).focus();
+}
+function setupTabs(){for(const id of TAB_IDS){$(`nav-${id}`).addEventListener('click',()=>selectTab(id));$(`nav-${id}`).addEventListener('keydown',e=>{const n=TAB_IDS.indexOf(id),to=e.key==='ArrowRight'?TAB_IDS[(n+1)%4]:e.key==='ArrowLeft'?TAB_IDS[(n+3)%4]:e.key==='Home'?TAB_IDS[0]:e.key==='End'?TAB_IDS[3]:null;if(to){e.preventDefault();selectTab(to,true);}});}selectTab('calculator');}
+function stopBattle(){battlePlaying=false;battleToken++;battleLastFrame=null;$('battle-play').textContent='Play';}
+function invalidateBattle(message){stopBattle();lastBattle=null;battleTime=0;$('battle-results').hidden=true;$('battle-status').textContent=state.baseline?(message||'A/B results need recalculation.'):'Capture a valid baseline in Balancing Workspace first.';}
+function battleLabel(outcome){return ({'player-win':'Player wins','enemy-win':'Enemy wins','mutual-ko':'Mutual KO','stalemate':'Stalemate','time-cap':'Unresolved: time cap','attack-cap':'Unresolved: attack cap'})[outcome]||outcome;}
+function renderBattleLane(which,model){const battle=model,b=frameAt(battle,battleTime),event=b.event,p0=battle.initial.playerHp,e0=battle.initial.enemyHp;
+ const put=(id,value)=>$(id).textContent=value;
+ put(`battle-${which}-formula`,`${registry[battle.formulaId]?.label || battle.formulaId} · v${battle.formulaVersion}`);
+ put(`battle-${which}-player-hp`,`${fmt(b.playerHp,2)} / ${fmt(p0,2)} HP`);put(`battle-${which}-enemy-hp`,`${fmt(b.enemyHp,2)} / ${fmt(e0,2)} HP`);
+ $(`battle-${which}-player-bar`).style.width=(p0>0?100*b.playerHp/p0:0)+'%';$(`battle-${which}-enemy-bar`).style.width=(e0>0?100*b.enemyHp/e0:0)+'%';
+ const hits=[];if(event.playerAttack)hits.push(`Player hits Enemy for ${fmt(event.playerDamage,2)}`);if(event.enemyAttack)hits.push(`Enemy hits Player for ${fmt(event.enemyDamage,2)}`);
+ put(`battle-${which}-tick`,hits.length?`t=${fmt(event.time,3)}s: ${hits.join(' · ')}`:'No attacks yet.');
+ put(`battle-${which}-outcome`,b.finished?`${battleLabel(battle.outcome)} · ${fmt(battle.endedAt,3)}s · ${battle.attacks} attacks`:'In progress');
+}
+function renderBattleFrame(){if(!lastBattle)return;
+ battleTime=Math.max(0,Math.min(battleTime,battleMax));$('battle-seek').value=String(battleTime);$('battle-clock').textContent=fmt(battleTime,2)+' s';
+ renderBattleLane('a',lastBattle.a);renderBattleLane('b',lastBattle.b);
+ if(battleTime>=battleMax-1e-12&&battlePlaying)stopBattle();
+}
+function playFrame(timestamp,token){if(!battlePlaying||!lastBattle||token!==battleToken)return;if(battleLastFrame!==null)battleTime+=Math.max(0,Math.min((timestamp-battleLastFrame)/1000,.25))*Number($('battle-speed').value);battleLastFrame=timestamp;renderBattleFrame();if(battlePlaying)requestAnimationFrame(t=>playFrame(t,token));}
+function setBattleTime(time){stopBattle();battleTime=time;renderBattleFrame();}
+function rowBattle(label,a,b,delta=null){const r=el('tr');for(const txt of [label,a,b,delta])r.append(el('td',{},txt===null?'—':String(txt)));$('battle-summary').append(r);}
+function renderBattleSummary(ab){const a=ab.a,b=ab.b;$('battle-summary').replaceChildren();
+ rowBattle('Outcome',battleLabel(a.outcome),battleLabel(b.outcome),'—');
+ rowBattle('End / cap time',fmt(a.endedAt,3)+' s',fmt(b.endedAt,3)+' s',fmt(ab.delta.endTime,3)+' s');
+ rowBattle('Player HP remaining',fmt(a.final.playerHp,3),fmt(b.final.playerHp,3),fmt(ab.delta.playerHp,3));
+ rowBattle('Enemy HP remaining',fmt(a.final.enemyHp,3),fmt(b.final.enemyHp,3),fmt(ab.delta.enemyHp,3));
+ rowBattle('Attack events',a.attacks,b.attacks,b.attacks-a.attacks);
+ rowBattle('Player → Enemy damage/hit',fmt(a.stats.player.damage),fmt(b.stats.player.damage),fmt(b.stats.player.damage-a.stats.player.damage));
+ rowBattle('Enemy → Player damage/hit',fmt(a.stats.enemy.damage),fmt(b.stats.enemy.damage),fmt(b.stats.enemy.damage-a.stats.enemy.damage));
+}
+function setupBattle(){
+ $('battle-open-workspace').addEventListener('click',()=>selectTab('workspace'));
+ $('battle-run').addEventListener('click',()=>{stopBattle();lastBattle=null;$('battle-results').hidden=true;
+  try{const ab=runAB(state.baseline,state,{firstHit:$('battle-first').value,maxTime:$('battle-max-time').value,maxAttacks:$('battle-max-attacks').value});lastBattle=ab;battleTime=0;battleMax=Math.max(ab.a.endedAt,ab.b.endedAt);$('battle-seek').max=String(Math.max(.001,battleMax));$('battle-seek').step='any';$('battle-seek').disabled=battleMax===0;$('battle-results').hidden=false;
+   $('battle-status').textContent=`Calculated A/B from the captured baseline and current scenario.${ab.formulaChanged?' Note: A/B uses different selected formulas.':''} Both directions validated independently.`;
+   $('battle-context').textContent=`A: ${ab.formulaA} · B: ${ab.formulaB} · first hit ${ab.settings.firstHit} · ${ab.settings.maxTime}s cap · ${ab.settings.maxAttacks} total-attack cap per lane. Simultaneous strikes resolve together.`;
+   renderBattleSummary(ab);renderBattleFrame();$('battle-play').disabled=battleMax===0;
+  }catch(error){$('battle-status').textContent='A/B unavailable: '+error.message;}
+ });
+ for(const id of ['battle-first','battle-max-time','battle-max-attacks'])$(id).addEventListener('change',()=>invalidateBattle('Battle settings changed. Calculate A/B again.'));
+ $('battle-seek').addEventListener('input',e=>setBattleTime(Number(e.target.value)));
+ $('battle-play').addEventListener('click',()=>{if(!lastBattle||battleMax===0)return;if(battlePlaying){stopBattle();return;}if(battleTime>=battleMax-1e-12)battleTime=0;battleLastFrame=null;battlePlaying=true;$('battle-play').textContent='Pause';const token=battleToken;requestAnimationFrame(t=>playFrame(t,token));});
+ $('battle-restart').addEventListener('click',()=>setBattleTime(0));
+ const seekEvent=direction=>{if(!lastBattle)return;const timeline=battleTimeline(lastBattle),eps=1e-10;const next=direction>0?timeline.find(t=>t>battleTime+eps):timeline.findLast(t=>t<battleTime-eps);if(next!==undefined)setBattleTime(next);};
+ $('battle-prev').addEventListener('click',()=>seekEvent(-1));$('battle-next').addEventListener('click',()=>seekEvent(1));
+}
+$('player-to-enemy').addEventListener('click',()=>{state.direction='player';renderAnalysisTargets();refresh();persist();});$('enemy-to-player').addEventListener('click',()=>{state.direction='enemy';renderAnalysisTargets();refresh();persist();});
+$('reset').addEventListener('click',()=>{const previous=state.baseline;const name=state.name;state=newState();state.baseline=previous;state.name=name;hydrate(state);persist();});
+$('project-name').addEventListener('input',e=>{state.name=e.target.value;persist();});
+$('project-export').addEventListener('click',()=>download(`${safeName(state.name)}.ucl.json`,JSON.stringify(exportProject(state),null,2),'application/json'));
+$('project-import').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>1024*1024)throw Error('Project exceeds the 1 MB import limit.');const imported=importProject(JSON.parse(await file.text()));hydrate(imported);persist();$('autosave-status').textContent='Project loaded successfully; locally saved.';}catch(error){$('autosave-status').textContent=`Import rejected: ${error.message}. Existing project unchanged.`;}finally{e.target.value='';}});
+$('clear-autosave').addEventListener('click',()=>{try{clearLocal();$('autosave-status').textContent='Local autosave cleared. Editing again will create a new autosave.';}catch(error){$('autosave-status').textContent='Unable to clear browser storage.';}});
+$('baseline-save').addEventListener('click',()=>{if(!latest){$('baseline-status').textContent='Cannot capture baseline until current values are valid.';return;}state.baseline=captureBaseline(state,latest);invalidateBattle('Baseline updated. Recalculate A/B battle.');invalidateAnalysis('Baseline changed. Run the sweep again for the new overlay.');renderComparison();persist();});
+$('baseline-restore').addEventListener('click',()=>{if(!state.baseline)return;const b=state.baseline;state.selected=b.selected;state.direction=b.direction;state.values=clone(b.values);state.params=clone(b.params);hydrate(state);persist();});
+$('baseline-clear').addEventListener('click',()=>{state.baseline=null;invalidateBattle('No baseline captured. Create one in Balancing Workspace first.');invalidateAnalysis('Baseline cleared. Run the sweep again.');renderComparison();persist();});
+$('compare-export').addEventListener('click',()=>{if(!state.baseline||!latest)return;download(`${safeName(state.name)}_comparison.csv`,comparisonCsv(state,latest),'text/csv;charset=utf-8');});
+buildProfiles();buildOptions();setupAnalytics();setupTabs();setupBattle();let restored=null;try{restored=loadLocal();}catch(error){$('autosave-status').textContent='Existing autosave could not be read; export a fresh project to preserve work.';}hydrate(restored||state);if(restored)$('autosave-status').textContent='Previous locally saved project restored.';else if($('autosave-status').textContent.includes('initializing'))persist();
+// Read-only diagnostic API. Real calculations always share the exported modules.
+window.CombatLab=Object.freeze({models:formulaMetadata(),evaluate,calculateScenario,getDependencies,defaults,exportCurrent:()=>exportProject(state),getState:()=>clone(state),runSweep:config=>runSweep(state,config),solveTarget:config=>solveTarget(state,config),runAB:options=>runAB(state.baseline,state,options),getAB:()=>clone(lastBattle),selectTab});
+
+</script></body></html>
