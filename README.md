@@ -29,3 +29,20 @@ The original source is a vertically composited promotional screenshot. The crop 
 This archive contains a complete website. Extract the whole archive before opening `index.html`; do not open `index.html` from inside the ZIP or upload it alone. `styles.css`, `script.js`, `assets/`, `tools/`, and the PDF resume must stay beside it. The thumbnail cards use only local files. The original My Food Factory screenshot is preserved unchanged in `assets/my-food-factory-store-screenshot.png`, with an optional full-size WebP review copy.
 
 The separately provided visual-preview PDF shows what the page should look like if your HTML preview surface blocks styles or scripts. The standalone HTML review uses optimized embedded imagery and can be opened in a regular browser, but ChatGPT's generic document preview is not a hosting service for interactive HTML.
+
+
+## FFBE in-game credits evidence (30 October 2026)
+
+- Added the user-supplied in-game staff credits screenshot to the FFBE case study, directly below the public unit gallery.
+- Preserved the unmodified original at `assets/ffbe-in-game-credits-original.jpg` and an independently cropped view at `assets/ffbe-game-designer-credits-crop.jpg`.
+- Added appropriately limited role attribution: the screenshot establishes the credited Game Designer role, not ownership of specific units or features.
+- The standalone browser review embeds both image variants and offers an expandable full screenshot; the deployable site uses locally bundled images and links to the original file.
+- The live GitHub Pages site was not updated.
+
+## Draft 1 copy revision (30 October 2026)
+
+The writing across the homepage, featured work, games, tools, professional experience, about, and contact sections has been updated to the approved direct-and-natural voice. Century Games combat and economy work remains the main emphasis; the later three-person prototype is deliberately secondary. FFBE unit gallery and the official in-game credits remain in place.
+
+The deployment ZIP contains `index.html`, `styles.css`, `script.js`, `assets/`, `tools/` and the existing résumé PDF at its root. Extract all contents together. For a self-contained layout preview, use `Koh_Chee_Hoe_Portfolio_Draft1_Copy_Review.html` instead.
+
+**Date check:** The portfolio keeps the previously requested Century Games period ending in November 2026. Confirm the factual date before public deployment, as this revision was prepared on 30 October 2026. The PDF résumé was not edited in this copy-only revision.

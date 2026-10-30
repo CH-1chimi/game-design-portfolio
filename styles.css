@@ -38,3 +38,25 @@
 .food-feature .food-image{isolation:isolate}
 .food-feature .food-image::after{background:linear-gradient(180deg,transparent 40%,rgba(4,11,16,.65) 100%)}
 @media(max-width:790px){.food-feature .food-local-image{object-position:center top}}
+
+
+/* In-game staff credit: documentary evidence below the unit gallery. */
+.ffbe-credits-proof{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:0;overflow:hidden;margin-top:26px;border:1px solid #ffffff30;border-radius:12px;background:linear-gradient(140deg,#1a2538,#0b1524)}
+.ffbe-credits-copy{padding:clamp(22px,3vw,38px);display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.ffbe-credits-copy .eyebrow{color:var(--mint)}
+.ffbe-credits-copy h3{margin:9px 0 14px;font-size:clamp(25px,3vw,36px);line-height:1.15;letter-spacing:-.04em;color:#f4f8f5}
+.ffbe-credits-copy p{margin:0 0 14px;color:#c2d0db;line-height:1.75}
+.ffbe-credits-copy .credits-note{font-size:12px;color:#95abbc}
+.ffbe-credits-copy .credits-link{display:inline-flex;margin-top:7px;padding:9px 0;text-decoration:none;font-weight:750;color:#a1ecd7;font-size:13px;border-bottom:1px solid currentColor}
+.ffbe-credits-copy .credits-link:hover{color:#fff}
+.ffbe-credits-figure{margin:0;display:flex;flex-direction:column;align-items:stretch;justify-content:center;background:linear-gradient(180deg,#020825,#061038);padding:24px;min-width:0}
+.ffbe-credits-figure>img{width:100%;max-height:360px;object-fit:contain;border:1px solid #6575b160;box-shadow:0 12px 40px #0005}
+.ffbe-credits-figure figcaption{font-size:11px;color:#b2bed7;line-height:1.5;margin-top:13px;text-align:center}
+.ffbe-credits-full{margin-top:15px;border:1px solid #ffffff30;padding:10px;border-radius:5px;font-size:12px;color:#bdd1e5}
+.ffbe-credits-full summary{cursor:pointer;color:#a1ecd7;font-weight:700}
+.ffbe-credits-full img{display:block;width:min(100%,420px);height:auto;margin:12px auto 0}
+@media(max-width:760px){.ffbe-credits-proof{grid-template-columns:1fr}.ffbe-credits-figure{padding:20px}.ffbe-credits-figure>img{max-height:none}.ffbe-credits-copy{padding:25px}.ffbe-credits-copy h3{font-size:27px}}
+
+/* Keep the portrait credit crop at intrinsic aspect ratio on narrow screens. */
+.ffbe-credits-proof{scroll-margin-top:100px}
+@media(max-width:760px){.ffbe-credits-figure>img{height:auto;max-height:none;object-fit:contain}}
