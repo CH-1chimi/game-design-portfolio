@@ -1,0 +1,127 @@
+{
+  "source": "github main 562160524034b395ab40adea69c0b6b8054bca2c",
+  "main_images_total": 16,
+  "inlined_assets": [
+    {
+      "image": "assets/haveh.webp",
+      "replacements": 1,
+      "sha256": "d96f71348f46274d827ed20c53923283a3dff611eddbb508b9d4b52a370dc798",
+      "original_bytes": 1692,
+      "inline_bytes": 1692,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/lasswell_nv.webp",
+      "replacements": 2,
+      "sha256": "765078e528bd38dafdef829b2b7a3d319d2b83ac5fdf381f0779d671ee0d1996",
+      "original_bytes": 2740,
+      "inline_bytes": 2740,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/legion-attack-gameplay.jpg",
+      "replacements": 1,
+      "sha256": "aaf86c2f002a8a6e57de5d891e28de99b9d00c1e32e361157e0a626e2cc67d3b",
+      "original_bytes": 222201,
+      "inline_bytes": 179390,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/lehftia.webp",
+      "replacements": 1,
+      "sha256": "d1306931cda3f1b5223f7bab8aae04a430fb45531da0e41ace3d4f9136aba685",
+      "original_bytes": 1726,
+      "inline_bytes": 1726,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/my-food-factory-thumbnail.webp",
+      "replacements": 1,
+      "sha256": "68634275d4740bfbc2d4222e764732f6f25fd18863f414217cda0a2e71f63218",
+      "original_bytes": 101738,
+      "inline_bytes": 79322,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/rain_neo_vision_bs.webp",
+      "replacements": 1,
+      "sha256": "9487dbc4e73541f7b36c04aadc95b5cf59511b3bc3825ac4a329a7e41839c53d",
+      "original_bytes": 3782,
+      "inline_bytes": 3782,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/rain_neo_vision_nv.webp",
+      "replacements": 2,
+      "sha256": "57c02a8f941a784931de959d69956add9f4527ebad2f3a334e8b7504f705be5f",
+      "original_bytes": 2922,
+      "inline_bytes": 2922,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/road-busters-gameplay.jpg",
+      "replacements": 1,
+      "sha256": "f5991dedc4efc6ba091b26e6e5f0106246962d08a73ce71ffbaafa7ef57355a7",
+      "original_bytes": 46332,
+      "inline_bytes": 32724,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/runda.webp",
+      "replacements": 1,
+      "sha256": "4c00c8816f031e8652ae1e78071a9acc9271ccd7b7ea259c0ccaf87d75329d15",
+      "original_bytes": 892,
+      "inline_bytes": 892,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/scavenger-original.webp",
+      "replacements": 1,
+      "sha256": "a409d142cd4d8ac27e52cf473096368db0a3927f9fe1d8655e8dc427de70f3d2",
+      "original_bytes": 55656,
+      "inline_bytes": 53306,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/slimetasia-original.webp",
+      "replacements": 1,
+      "sha256": "1dce32243e8394268f2ff0e08b3eb4ae21d1800e4acfc218d1677eb1e39b5094",
+      "original_bytes": 115986,
+      "inline_bytes": 82048,
+      "mime": "image/webp"
+    },
+    {
+      "image": "assets/summer_sniper_physalis_nv.webp",
+      "replacements": 2,
+      "sha256": "e13fbf660c5a0a60e77c8ffa919a18854037c5a0a583dd43f7dd837862097ebb",
+      "original_bytes": 2782,
+      "inline_bytes": 2782,
+      "mime": "image/webp"
+    }
+  ],
+  "embedded_creds": true,
+  "tools_hardened": [
+    "economy-demo.html",
+    "unit-demo.html",
+    "progression-demo.html"
+  ],
+  "remaining_local_refs": [
+    [
+      "a",
+      "tools/universal-combat-lab.html"
+    ],
+    [
+      "a",
+      "tools/economy-demo.html"
+    ],
+    [
+      "a",
+      "tools/unit-demo.html"
+    ],
+    [
+      "a",
+      "tools/progression-demo.html"
+    ]
+  ],
+  "file_bytes": 746379
+}

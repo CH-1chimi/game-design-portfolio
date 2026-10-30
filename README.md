@@ -46,3 +46,13 @@ The writing across the homepage, featured work, games, tools, professional exper
 The deployment ZIP contains `index.html`, `styles.css`, `script.js`, `assets/`, `tools/` and the existing résumé PDF at its root. Extract all contents together. For a self-contained layout preview, use `Koh_Chee_Hoe_Portfolio_Draft1_Copy_Review.html` instead.
 
 **Date check:** The portfolio keeps the previously requested Century Games period ending in November 2026. Confirm the factual date before public deployment, as this revision was prepared on 30 October 2026. The PDF résumé was not edited in this copy-only revision.
+
+
+## Media reliability update — 30 October 2026
+
+- Every main-page image (16 occurrences, including the FFBE staff credit) is now embedded in `index.html` as a validated data URI. External CDN and `/assets/` image requests are not needed for rendering the main page. The original image files remain archived under `assets/`.
+- Main CSS, navigation JS, and favicon are embedded so the portfolio shell also works when individual asset requests fail.
+- Three public design-tool demonstrations now include their stylesheet and shared script directly; Universal Combat Lab was already self-contained.
+- The full My Food Factory source screenshot is linked to its GitHub file viewer, not the Pages image route.
+- Asset-failure simulation: 16/16 main images loaded at 1440px, 390px and 320px; no main-page JavaScript errors or horizontal overflow; all four tool pages opened without JavaScript errors.
+- This reduces dependencies; it cannot guarantee access if the site itself, GitHub Pages, or a third-party linked destination is unavailable.
