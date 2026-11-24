@@ -1,0 +1,47 @@
+
+
+/* V2.8 shared case study template. Same design tokens and typography as the portfolio. */
+.case-page .site-head{border-bottom:1px solid var(--line)}
+.case-page .case-intro{padding:40px 0 34px}
+.case-page .back-link{display:inline-block;margin-bottom:20px;font-size:14px;font-weight:600}
+.case-page .kicker{font-size:14px;color:var(--muted);margin:0 0 12px}
+.case-page h1{font-size:clamp(36px,5.6vw,76px);font-weight:610;line-height:1.1;letter-spacing:-.035em;margin:0 0 16px;max-width:1000px;overflow-wrap:break-word}
+.case-page .lead{max-width:800px;font-size:17px;margin-bottom:24px}
+.case-page .case-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:28px 0 0;padding:20px 0 0;border-top:1px solid var(--line)}
+.case-page .case-facts dt{font-size:13px;color:var(--muted);margin-bottom:5px}
+.case-page .case-facts dd{font-size:17px;font-weight:600;line-height:1.4;color:var(--ink);margin:0}
+.case-page .section,.case-page .store-gallery,.case-page .hero{border-top:1px solid var(--line);padding:36px 0 40px;margin:0}
+.case-page h2{font-size:clamp(28px,3.5vw,42px);font-weight:580;margin:0 0 20px}
+.case-page h3{font-size:23px;font-weight:600;margin:26px 0 10px}
+.case-page .section>p,.case-page .section>ul{max-width:850px}
+.case-page .label,.case-page figcaption,.case-page .foot{font-size:13px;color:var(--muted);line-height:1.5}
+.case-page ul{padding-left:22px;color:var(--muted)}.case-page li{margin:7px 0}
+.case-page .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 36px;margin:24px 0}
+.case-page .panel{border-top:1px solid var(--line);padding:18px 0 0;min-width:0;background:none;border-radius:0}
+.case-page .panel h3{font-size:20px;margin:0 0 8px}.case-page .panel p:last-child{margin:0}
+.case-page .sample,.case-page .case-outcome{border-left:2px solid var(--accent);padding:2px 0 2px 14px;margin:20px 0;max-width:850px;color:var(--muted)}
+.case-page .sample strong{color:var(--ink);display:block;margin-bottom:5px}.case-page .sample p:last-child{margin:0}
+.case-page .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:44px}
+.case-page .hero img,.case-page .evidence img{width:100%;height:auto;display:block}.case-page .hero h2{margin-top:0}.case-page .hero .label{margin:10px 0 0}
+.case-page .links{display:flex;gap:12px 20px;flex-wrap:wrap;align-items:center;margin:15px 0;font-size:14px}
+.case-page .links a,.case-page .btn:not(.primary){color:var(--accent);text-decoration:underline;text-underline-offset:4px;font-size:14px}
+.case-page .btn.primary{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--bg);font-weight:650;font-size:14px;border:1px solid var(--accent);border-radius:5px;padding:8px 13px;text-decoration:none;line-height:1.35;min-height:40px}
+.case-page .btn.primary:hover{background:transparent;color:var(--accent)}
+.case-page .store-grid{display:grid;grid-template-columns:repeat(var(--store-cols),minmax(0,1fr));gap:12px;align-items:start}
+.case-page .store-grid figure{margin:0;min-width:0}.case-page .store-grid img{width:100%;height:auto;aspect-ratio:9/16;object-fit:contain}
+.case-page .store-grid figcaption{margin-top:8px}.case-page .store-gallery .label{margin:14px 0 0;max-width:850px}
+.case-page .food-gallery .store-grid{max-width:760px}.case-page .store-references{margin:20px 0 0;display:flex;align-items:baseline;gap:12px 24px;flex-wrap:wrap}
+.case-page .store-references h2{font-size:19px;margin:0}.case-page .store-references .links{margin:0}
+.case-page .method-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0 24px}
+.case-page .method-flow>div{background:#222523;border:1px solid var(--line);padding:14px;min-width:0}
+.case-page .method-flow strong{display:block;color:var(--ink);font-size:15px;line-height:1.35;margin-bottom:7px}
+.case-page .method-flow small{display:block;color:var(--muted);font-size:13px;line-height:1.5}
+.case-page .case-figure{background:#222523;padding:24px;margin:24px 0;max-width:850px;border:1px solid var(--line)}
+.case-page .case-figure h3{margin:0 0 16px}.case-page .case-figure svg{display:block;width:100%;height:auto;max-width:660px;margin:0 auto 12px}
+.case-page .case-figure figcaption{margin-top:12px}.case-page .case-figure p{font-size:13px}
+.case-page .case-footer{display:flex;align-items:start;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:24px 0;border-top:1px solid var(--line)}
+.case-page .case-footer p{margin:0;flex:1;min-width:200px}.case-page .case-footer a{font-size:14px;font-weight:600}
+.case-page .footer{margin-top:8px}
+@media(max-width:850px){.case-page .case-intro{padding:32px 0 28px}.case-page .hero{gap:24px}.case-page .method-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.case-page .store-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.case-page .case-intro{padding:26px 0 24px}.case-page h1{font-size:clamp(32px,9vw,46px)}.case-page .lead{font-size:16px}.case-page .case-facts{grid-template-columns:1fr;gap:14px;margin-top:20px;padding-top:16px}.case-page .case-facts dd{font-size:16px}.case-page .section,.case-page .store-gallery,.case-page .hero{padding:27px 0 30px}.case-page .two,.case-page .hero{grid-template-columns:1fr;gap:18px}.case-page .case-figure{padding:14px}.case-page .store-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.case-page .food-gallery .store-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.case-page .store-grid figcaption{font-size:12px}.case-page .method-flow>div{padding:10px}.case-page .method-flow strong{font-size:14px}.case-page .case-footer{gap:12px}.case-page .back-link{margin-bottom:16px}}
+@media(max-width:360px){.case-page .method-flow{grid-template-columns:1fr}.case-page .food-gallery .store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
